@@ -1,0 +1,8 @@
+# Ignore backend and infra — Vercel only builds the Next.js frontend
+apps/api/
+infrastructure/
+packages/
+docs/
+*.ipynb
+*.md
+!README.md
