@@ -347,6 +347,21 @@
   .notif-footer a:hover{color:var(--indigo)}
 
   svg{display:inline-block;vertical-align:middle}
+
+  /* ── DOWNLOAD BUTTON ── */
+  #download-btn{
+    position:fixed;bottom:24px;right:24px;z-index:9999;
+    display:flex;align-items:center;gap:8px;
+    padding:0 18px;height:42px;border-radius:8px;
+    background:var(--indigo);color:#fff;
+    font-size:13px;font-weight:600;cursor:pointer;
+    border:1px solid var(--indigo-l);
+    box-shadow:0 4px 16px rgba(80,70,229,.4);
+    transition:background .15s,box-shadow .15s,transform .1s;
+    text-decoration:none;
+  }
+  #download-btn:hover{background:#4038c9;box-shadow:0 6px 24px rgba(80,70,229,.55);transform:translateY(-1px)}
+  #download-btn:active{transform:translateY(0)}
 </style>
 </head>
 <body>
@@ -876,6 +891,30 @@
   function toggleNotif() {
     document.getElementById('notifPanel').classList.toggle('open');
   }
+</script>
+
+<!-- Download button -->
+<a id="download-btn" href="#" download="etihuku-preview.html" title="Download this preview">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  Download Preview
+</a>
+<script>
+  // Point the anchor at a Blob of the page's own HTML so it works
+  // regardless of how the file is served (file://, localhost, etc.)
+  (function () {
+    const btn = document.getElementById('download-btn');
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const html = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'etihuku-preview.html';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    });
+  })();
 </script>
 </body>
 </html>
