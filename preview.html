@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Etihuku DataOps Platform — Preview</title>
+<style>
+  :root {
+    --bg:          #0F0F12;
+    --gray-900:    #111116;
+    --gray-800:    #1A1A22;
+    --gray-700:    #26262F;
+    --gray-600:    #35353F;
+    --gray-500:    #6B6B7A;
+    --gray-400:    #9595A2;
+    --gray-300:    #B8B8C3;
+    --gray-200:    #D4D4DC;
+    --gray-100:    #EBEBF0;
+    --white:       #F7F7FA;
+    --indigo:      #5046E5;
+    --indigo-l:    #7C73F5;
+    --success:     #10B981;
+    --warning:     #F59E0B;
+    --error:       #EF4444;
+    --info:        #3B82F6;
+    --telecom:     #8B5CF6;
+    --security:    #F59E0B;
+    --mining:      #10B981;
+    --engineering: #EC4899;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;overflow:hidden}
+
+  /* ── SIDEBAR ── */
+  .sidebar{
+    width:256px;min-width:256px;height:100vh;display:flex;flex-direction:column;
+    background:var(--gray-900);border-right:1px solid var(--gray-700);
+    position:fixed;top:0;left:0;z-index:50;transition:width .2s;
+  }
+  .sidebar-header{
+    height:60px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;border-bottom:1px solid var(--gray-700);flex-shrink:0;
+  }
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-mark{
+    width:32px;height:32px;border-radius:6px;background:var(--indigo);
+    display:flex;align-items:center;justify-content:center;
+    font-family:monospace;font-weight:700;color:#fff;font-size:13px;flex-shrink:0;
+  }
+  .logo-text{font-size:16px;font-weight:700;color:var(--white);line-height:1.2}
+  .logo-sub{font-size:11px;color:var(--gray-500)}
+  .collapse-btn{
+    width:24px;height:24px;border-radius:4px;border:none;background:transparent;
+    color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:14px;transition:background .15s,color .15s;
+  }
+  .collapse-btn:hover{background:var(--gray-800);color:var(--gray-200)}
+
+  .vertical-selector{
+    margin:12px;border-radius:6px;border:1px solid var(--gray-700);
+    background:var(--gray-900);padding:10px 12px;cursor:pointer;
+    display:flex;align-items:center;gap:10px;transition:border-color .15s,background .15s;
+    position:relative;
+  }
+  .vertical-selector:hover{border-color:var(--gray-600);background:var(--gray-800)}
+  .v-dot{
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;flex-shrink:0;font-size:12px;
+  }
+  .v-info{flex:1;min-width:0}
+  .v-label{font-size:10px;color:var(--gray-500);display:block}
+  .v-name{font-size:13px;font-weight:500;color:var(--gray-200);display:block}
+  .chevron{color:var(--gray-500);font-size:12px;transition:transform .2s}
+
+  /* Dropdown */
+  .v-dropdown{
+    display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;
+    background:var(--gray-800);border:1px solid var(--gray-700);border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden;
+  }
+  .v-dropdown.open{display:block}
+  .v-option{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;
+    transition:background .1s;color:var(--gray-300);font-size:13px;font-weight:500;
+  }
+  .v-option:hover{background:var(--gray-700)}
+  .v-option.active{background:rgba(80,70,229,.12);color:var(--indigo-l)}
+  .active-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0}
+
+  .sidebar-border{border-bottom:1px solid var(--gray-700)}
+
+  nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+  .nav-label{font-size:10px;color:var(--gray-600);padding:0 12px;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;
+    cursor:pointer;text-decoration:none;color:var(--gray-400);font-size:13px;
+    font-weight:500;transition:background .1s,color .1s;
+  }
+  .nav-item:hover{background:var(--gray-800);color:var(--gray-200)}
+  .nav-item.active{background:rgba(80,70,229,.12);color:var(--indigo-l)}
+  .nav-item.active .nav-icon{color:var(--indigo-l)}
+  .nav-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .badge{
+    margin-left:auto;background:rgba(80,70,229,.18);color:var(--indigo-l);
+    font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;
+  }
+
+  .sidebar-footer{
+    border-top:1px solid var(--gray-700);padding:12px;flex-shrink:0;
+  }
+  .user-row{
+    display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;
+    cursor:pointer;transition:background .15s;
+  }
+  .user-row:hover{background:var(--gray-800)}
+  .avatar{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,var(--indigo),var(--indigo-l));
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;color:#fff;
+  }
+  .user-name{font-size:13px;font-weight:500;color:var(--gray-200)}
+  .user-email{font-size:11px;color:var(--gray-500)}
+
+  /* ── TOP BAR ── */
+  .topbar{
+    position:fixed;top:0;left:256px;right:0;height:60px;z-index:30;
+    background:rgba(17,17,22,.95);border-bottom:1px solid var(--gray-700);
+    backdrop-filter:blur(8px);
+    display:flex;align-items:center;gap:12px;padding:0 16px;
+    transition:left .2s;
+  }
+  .search-box{
+    flex:1;max-width:420px;height:36px;display:flex;align-items:center;gap:8px;
+    background:var(--gray-800);border:1px solid var(--gray-700);border-radius:6px;
+    padding:0 12px;transition:border-color .15s,box-shadow .15s;cursor:text;
+  }
+  .search-box:focus-within{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(80,70,229,.12)}
+  .search-icon{color:var(--gray-500);flex-shrink:0;font-size:14px}
+  .search-input{
+    flex:1;background:transparent;border:none;outline:none;
+    color:var(--gray-200);font-size:14px;
+  }
+  .search-input::placeholder{color:var(--gray-500)}
+  .kbd{
+    display:inline-flex;align-items:center;gap:2px;padding:2px 6px;
+    border-radius:4px;border:1px solid var(--gray-700);
+    font-size:10px;color:var(--gray-500);font-family:monospace;flex-shrink:0;
+  }
+  .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .org-btn{
+    display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;
+    border-radius:6px;border:1px solid var(--gray-700);background:var(--gray-800);
+    color:var(--gray-300);font-size:13px;font-weight:500;cursor:pointer;
+    transition:border-color .15s;
+  }
+  .org-btn:hover{border-color:var(--gray-600)}
+  .org-icon{
+    width:16px;height:16px;border-radius:3px;
+    background:linear-gradient(135deg,var(--indigo),var(--indigo-l));flex-shrink:0;
+  }
+  .icon-btn{
+    width:36px;height:36px;border-radius:6px;border:1px solid var(--gray-700);
+    background:var(--gray-800);color:var(--gray-400);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s,color .15s;position:relative;font-size:16px;
+  }
+  .icon-btn:hover{border-color:var(--gray-600);color:var(--gray-200)}
+  .notif-badge{
+    position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;
+    background:var(--error);display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:700;color:#fff;
+  }
+  .user-btn{
+    display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;height:36px;
+    border-radius:6px;border:1px solid var(--gray-700);background:var(--gray-800);
+    cursor:pointer;transition:border-color .15s;
+  }
+  .user-btn:hover{border-color:var(--gray-600)}
+  .avatar-sm{
+    width:24px;height:24px;border-radius:50%;
+    background:linear-gradient(135deg,var(--indigo),var(--indigo-l));
+    display:flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:700;color:#fff;
+  }
+  .user-btn-name{font-size:13px;font-weight:500;color:var(--gray-200)}
+  .chevron-sm{color:var(--gray-500);font-size:11px}
+
+  /* ── MAIN ── */
+  .main{margin-left:256px;padding-top:60px;min-height:100vh;transition:margin-left .2s;overflow-y:auto}
+  .page{padding:28px 28px 40px}
+
+  /* Page header */
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+  .page-title{font-size:20px;font-weight:700;color:var(--white)}
+  .page-sub{font-size:13px;color:var(--gray-500);margin-top:2px}
+  .header-actions{display:flex;gap:8px}
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;padding:0 14px;height:36px;
+    border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;
+    transition:background .15s,border-color .15s;border:none;
+  }
+  .btn-ghost{background:transparent;border:1px solid var(--gray-700);color:var(--gray-300)}
+  .btn-ghost:hover{background:var(--gray-800);border-color:var(--gray-600)}
+  .btn-primary{background:var(--indigo);color:#fff;border:1px solid var(--indigo)}
+  .btn-primary:hover{background:#4038c9}
+
+  /* Metric cards */
+  .metrics-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  .metric-card{
+    background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;
+    padding:16px;cursor:pointer;transition:border-color .15s,background .15s;
+  }
+  .metric-card:hover{border-color:var(--gray-600);background:var(--gray-800)}
+  .metric-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .metric-label{font-size:11px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+  .metric-icon{font-size:16px}
+  .metric-value{font-size:26px;font-weight:700;color:var(--white);line-height:1;margin-bottom:4px}
+  .metric-value.quality{color:#F59E0B}
+  .metric-sub{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:4px}
+  .up{color:var(--success)}
+  .down{color:var(--error)}
+  .pill{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+  .pill-success{background:rgba(16,185,129,.12);color:var(--success)}
+  .pill-warning{background:rgba(245,158,11,.12);color:var(--warning)}
+  .pill-error{background:rgba(239,68,68,.12);color:var(--error)}
+  .pill-running{background:rgba(80,70,229,.12);color:var(--indigo-l)}
+
+  /* Inline mini-stats for pipelines */
+  .mini-stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .mini{display:inline-flex;align-items:center;gap:3px;font-size:11px}
+  .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dot-run{background:var(--indigo-l)}
+  .dot-ok{background:var(--success)}
+  .dot-err{background:var(--error)}
+
+  /* Section grid */
+  .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .card{
+    background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;overflow:hidden;
+  }
+  .card-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 16px 0;margin-bottom:12px;
+  }
+  .card-title{font-size:14px;font-weight:600;color:var(--white)}
+  .card-link{font-size:12px;color:var(--indigo-l);cursor:pointer;text-decoration:none;border:none;background:none}
+  .card-link:hover{color:var(--indigo)}
+
+  /* Verticals breakdown */
+  .verticals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .vert-card{
+    background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;
+    padding:16px;cursor:pointer;transition:border-color .2s,background .2s;
+  }
+  .vert-card:hover{border-color:var(--gray-600);background:var(--gray-800)}
+  .vert-card.active-vert{border-color:rgba(80,70,229,.5);background:rgba(80,70,229,.06)}
+  .vert-icon-wrap{
+    width:36px;height:36px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;font-size:16px;margin-bottom:10px;
+  }
+  .vert-name{font-size:13px;font-weight:600;color:var(--white);margin-bottom:8px}
+  .vert-stat{font-size:12px;color:var(--gray-500);margin-bottom:3px;display:flex;justify-content:space-between}
+  .vert-stat span{color:var(--gray-300);font-weight:500}
+  .vert-footer{margin-top:10px;display:flex;align-items:center;justify-content:space-between}
+  .quality-num{font-size:16px;font-weight:700}
+
+  /* Pipelines table */
+  .table{width:100%;border-collapse:collapse}
+  .table th{
+    font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;
+    letter-spacing:.04em;padding:8px 16px;border-bottom:1px solid var(--gray-700);
+    text-align:left;
+  }
+  .table td{padding:12px 16px;border-bottom:1px solid var(--gray-700);font-size:13px;color:var(--gray-300)}
+  .table tr:last-child td{border-bottom:none}
+  .table tr:hover td{background:rgba(255,255,255,.02)}
+  .pipeline-name{font-weight:500;color:var(--white)}
+  .vertical-tag{
+    display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
+    border-radius:4px;font-size:11px;font-weight:500;
+  }
+
+  /* Drift alerts */
+  .drift-list{padding:0 4px 8px}
+  .drift-item{
+    display:flex;gap:12px;padding:12px;border-radius:8px;
+    transition:background .1s;cursor:pointer;margin:0 4px;
+  }
+  .drift-item:hover{background:var(--gray-800)}
+  .drift-icon{
+    width:32px;height:32px;border-radius:8px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:14px;
+  }
+  .drift-severity{font-size:11px;font-weight:600;margin-bottom:2px}
+  .drift-model{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px}
+  .drift-feature{font-size:12px;color:var(--gray-400)}
+  .drift-psi{display:flex;align-items:center;gap:6px;margin-top:4px}
+  .psi-bar{height:4px;border-radius:2px;background:var(--gray-700);flex:1}
+  .psi-fill{height:4px;border-radius:2px}
+  .psi-val{font-size:11px;color:var(--gray-500)}
+
+  /* Quality spotlight */
+  .quality-spotlight{margin-bottom:24px}
+  .quality-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+  .q-card{
+    background:var(--gray-900);border:1px solid var(--gray-700);border-radius:10px;
+    padding:14px 12px;cursor:pointer;transition:border-color .15s;
+  }
+  .q-card:hover{border-color:var(--gray-600)}
+  .q-score{
+    font-size:28px;font-weight:700;line-height:1;margin-bottom:6px;
+  }
+  .q-name{font-size:12px;font-weight:500;color:var(--gray-300);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .q-vertical{font-size:11px;color:var(--gray-500)}
+  .q-bar{height:3px;border-radius:2px;background:var(--gray-700);margin-top:10px}
+  .q-fill{height:3px;border-radius:2px}
+
+  /* Notification drawer */
+  .notif-panel{
+    display:none;position:absolute;top:52px;right:0;width:320px;z-index:200;
+    background:var(--gray-800);border:1px solid var(--gray-700);border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);overflow:hidden;
+  }
+  .notif-panel.open{display:block}
+  .notif-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--gray-700);
+  }
+  .notif-title{font-size:14px;font-weight:600;color:var(--white)}
+  .notif-item{
+    display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--gray-700);
+    cursor:pointer;transition:background .1s;
+  }
+  .notif-item:last-child{border-bottom:none}
+  .notif-item:hover{background:var(--gray-700)}
+  .notif-item.unread{background:rgba(80,70,229,.04)}
+  .notif-dot{width:6px;height:6px;border-radius:50%;background:var(--indigo);margin-top:6px;flex-shrink:0}
+  .notif-body{flex:1;min-width:0}
+  .notif-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+  .notif-ttl{font-size:13px;font-weight:500;color:var(--gray-100)}
+  .notif-time{font-size:11px;color:var(--gray-500);flex-shrink:0}
+  .notif-msg{font-size:12px;color:var(--gray-400)}
+  .notif-icon{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px}
+  .notif-footer{padding:10px 16px;border-top:1px solid var(--gray-700)}
+  .notif-footer a{font-size:12px;color:var(--indigo-l);cursor:pointer;text-decoration:none}
+  .notif-footer a:hover{color:var(--indigo)}
+
+  svg{display:inline-block;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-mark">E</div>
+      <div>
+        <div class="logo-text">Etihuku</div>
+        <div class="logo-sub">DataOps Platform</div>
+      </div>
+    </div>
+    <button class="collapse-btn" onclick="toggleSidebar()" title="Collapse">‹</button>
+  </div>
+
+  <!-- Vertical selector -->
+  <div style="padding:12px;border-bottom:1px solid var(--gray-700)">
+    <div class="vertical-selector" id="vSelector" onclick="toggleVertical()">
+      <div class="v-dot" id="vDot" style="background:rgba(139,92,246,.15)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 7 9l5 4 5-8 5 4"/><circle cx="22" cy="4" r="2"/></svg>
+      </div>
+      <div class="v-info">
+        <span class="v-label">Vertical</span>
+        <span class="v-name" id="vName">Telecommunications</span>
+      </div>
+      <span class="chevron" id="vChevron">▾</span>
+
+      <div class="v-dropdown" id="vDropdown">
+        <div class="v-option active" onclick="selectVertical('telecom','Telecommunications','#8B5CF6',event)">
+          <div class="v-dot" style="background:rgba(139,92,246,.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20 7 9l5 4 5-8 5 4"/><circle cx="22" cy="4" r="2"/></svg></div>
+          <span>Telecommunications</span>
+          <span class="active-dot" style="background:#8B5CF6"></span>
+        </div>
+        <div class="v-option" onclick="selectVertical('security','Security','#F59E0B',event)">
+          <div class="v-dot" style="background:rgba(245,158,11,.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <span>Security</span>
+        </div>
+        <div class="v-option" onclick="selectVertical('mining','Mining','#10B981',event)">
+          <div class="v-dot" style="background:rgba(16,185,129,.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <span>Mining</span>
+        </div>
+        <div class="v-option" onclick="selectVertical('engineering','Engineering','#EC4899',event)">
+          <div class="v-dot" style="background:rgba(236,72,153,.15)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M17.66 17.66l-1.41-1.41M6.34 17.66l1.41-1.41"/></svg></div>
+          <span>Engineering</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <p class="nav-label">Navigation</p>
+    <a class="nav-item active" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+      Overview
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>
+      Datasets
+      <span class="badge">1,284</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg></span>
+      Pipelines
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      Data Quality
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+      Annotations
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      Model Monitoring
+      <span class="badge" style="background:rgba(239,68,68,.15);color:var(--error)">3</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>
+      Connectors
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></span>
+      Data Catalog
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+      Governance
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M17.66 17.66l-1.41-1.41M6.34 17.66l1.41-1.41"/></svg></span>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">AD</div>
+      <div>
+        <div class="user-name">Admin User</div>
+        <div class="user-email">admin@etihuku.co.za</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════ TOP BAR ═══════════════════ -->
+<header class="topbar" id="topbar">
+  <div class="search-box">
+    <span class="search-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </span>
+    <input class="search-input" placeholder="Search datasets, pipelines, features…" />
+    <span class="kbd">⌘K</span>
+  </div>
+
+  <div class="topbar-right">
+    <div class="org-btn">
+      <div class="org-icon"></div>
+      <span>Etihuku Demo</span>
+      <span style="font-size:11px;color:var(--gray-500)">▾</span>
+    </div>
+
+    <div style="position:relative">
+      <button class="icon-btn" onclick="toggleNotif()" id="notifBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge">2</span>
+      </button>
+
+      <!-- Notification panel -->
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-header">
+          <span class="notif-title">Notifications <span class="pill pill-running" style="font-size:10px;padding:0 6px">2</span></span>
+          <button onclick="toggleNotif()" style="background:none;border:none;color:var(--gray-500);cursor:pointer;font-size:14px">✕</button>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-icon" style="background:rgba(239,68,68,.12)">🔴</div>
+          <div class="notif-body">
+            <div class="notif-row"><span class="notif-ttl">Pipeline Failed</span><span class="notif-time">5m ago</span></div>
+            <div class="notif-msg">CDR Processing pipeline failed at Transform stage.</div>
+          </div>
+          <div class="notif-dot"></div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-icon" style="background:rgba(245,158,11,.12)">⚠️</div>
+          <div class="notif-body">
+            <div class="notif-row"><span class="notif-ttl">Drift Detected</span><span class="notif-time">23m ago</span></div>
+            <div class="notif-msg">Churn model: feature `tenure_months` PSI 0.28 (threshold 0.2).</div>
+          </div>
+          <div class="notif-dot"></div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(59,130,246,.12)">ℹ️</div>
+          <div class="notif-body">
+            <div class="notif-row"><span class="notif-ttl">Data Sync Complete</span><span class="notif-time">1h ago</span></div>
+            <div class="notif-msg">PostgreSQL connector synced 1.2M rows successfully.</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(16,185,129,.12)">✅</div>
+          <div class="notif-body">
+            <div class="notif-row"><span class="notif-ttl">Quality Score Improved</span><span class="notif-time">3h ago</span></div>
+            <div class="notif-msg">Network KPI dataset quality score rose to 94/100.</div>
+          </div>
+        </div>
+        <div class="notif-footer"><a href="#">View all notifications →</a></div>
+      </div>
+    </div>
+
+    <div class="user-btn">
+      <div class="avatar-sm">AD</div>
+      <span class="user-btn-name">Admin</span>
+      <span class="chevron-sm">▾</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ MAIN CONTENT ═══════════════════ -->
+<main class="main" id="main">
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Overview</div>
+        <div class="page-sub">Platform health &nbsp;·&nbsp; 21 Feb 2026, 09:00 SAST</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Reports
+        </button>
+        <button class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Dataset
+        </button>
+      </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="metrics-grid">
+      <!-- Total Datasets -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Total Datasets</span>
+          <span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-500)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span>
+        </div>
+        <div class="metric-value">1,284</div>
+        <div class="metric-sub"><span class="up">↑ +34</span> this week</div>
+      </div>
+      <!-- Composite Quality -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Composite Quality</span>
+          <span class="metric-icon">⭐</span>
+        </div>
+        <div class="metric-value quality">91<span style="font-size:16px;color:var(--gray-500)">/100</span></div>
+        <div class="metric-sub"><span class="pill pill-success">Excellent</span></div>
+      </div>
+      <!-- Active Pipelines -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Active Pipelines</span>
+          <span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-500)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg></span>
+        </div>
+        <div class="metric-value">47</div>
+        <div class="mini-stats">
+          <span class="mini"><span class="dot dot-run"></span><span style="color:var(--indigo-l)">12 running</span></span>
+          <span class="mini"><span class="dot dot-ok"></span><span style="color:var(--success)">31 ok</span></span>
+          <span class="mini"><span class="dot dot-err"></span><span style="color:var(--error)">4 failed</span></span>
+        </div>
+      </div>
+      <!-- Models Monitored -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Models Monitored</span>
+          <span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-500)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+        </div>
+        <div class="metric-value">23</div>
+        <div class="metric-sub"><span class="up">↑ +2</span>&nbsp; <span class="pill pill-warning">3 alerts</span></div>
+      </div>
+      <!-- Storage -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Storage Consumed</span>
+          <span class="metric-icon">💾</span>
+        </div>
+        <div class="metric-value">18.4<span style="font-size:16px;color:var(--gray-500)">TB</span></div>
+        <div class="metric-sub"><span class="up">↑ +1.2 TB</span> this month</div>
+      </div>
+      <!-- Rows Ingested -->
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label">Rows Ingested</span>
+          <span class="metric-icon">📥</span>
+        </div>
+        <div class="metric-value">284<span style="font-size:16px;color:var(--gray-500)">M</span></div>
+        <div class="metric-sub"><span class="up">↑ +12%</span> vs last week</div>
+      </div>
+    </div>
+
+    <!-- Vertical Breakdown -->
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--white)">Vertical Breakdown</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:2px">Click a card to switch context</div>
+      </div>
+    </div>
+    <div class="verticals-grid">
+      <div class="vert-card active-vert" onclick="selectVertCard(this,'telecom','Telecommunications','#8B5CF6')">
+        <div class="vert-icon-wrap" style="background:rgba(139,92,246,.12)">📡</div>
+        <div class="vert-name">Telecommunications</div>
+        <div class="vert-stat">Datasets <span>412</span></div>
+        <div class="vert-stat">Pipelines <span>18</span></div>
+        <div class="vert-footer">
+          <div>
+            <div class="quality-num" style="color:#8B5CF6">94</div>
+            <div style="font-size:10px;color:var(--gray-500)">Quality score</div>
+          </div>
+          <span class="pill pill-warning">1 alert</span>
+        </div>
+      </div>
+      <div class="vert-card" onclick="selectVertCard(this,'security','Security','#F59E0B')">
+        <div class="vert-icon-wrap" style="background:rgba(245,158,11,.12)">🔒</div>
+        <div class="vert-name">Security</div>
+        <div class="vert-stat">Datasets <span>287</span></div>
+        <div class="vert-stat">Pipelines <span>11</span></div>
+        <div class="vert-footer">
+          <div>
+            <div class="quality-num" style="color:#F59E0B">78</div>
+            <div style="font-size:10px;color:var(--gray-500)">Quality score</div>
+          </div>
+          <span class="pill pill-error">2 alerts</span>
+        </div>
+      </div>
+      <div class="vert-card" onclick="selectVertCard(this,'mining','Mining','#10B981')">
+        <div class="vert-icon-wrap" style="background:rgba(16,185,129,.12)">⛰️</div>
+        <div class="vert-name">Mining</div>
+        <div class="vert-stat">Datasets <span>356</span></div>
+        <div class="vert-stat">Pipelines <span>13</span></div>
+        <div class="vert-footer">
+          <div>
+            <div class="quality-num" style="color:#10B981">91</div>
+            <div style="font-size:10px;color:var(--gray-500)">Quality score</div>
+          </div>
+          <span class="pill pill-success">No alerts</span>
+        </div>
+      </div>
+      <div class="vert-card" onclick="selectVertCard(this,'engineering','Engineering','#EC4899')">
+        <div class="vert-icon-wrap" style="background:rgba(236,72,153,.12)">🔧</div>
+        <div class="vert-name">Engineering</div>
+        <div class="vert-stat">Datasets <span>229</span></div>
+        <div class="vert-stat">Pipelines <span>5</span></div>
+        <div class="vert-footer">
+          <div>
+            <div class="quality-num" style="color:#EC4899">85</div>
+            <div style="font-size:10px;color:var(--gray-500)">Quality score</div>
+          </div>
+          <span class="pill pill-success">No alerts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipelines + Drift Alerts -->
+    <div class="section-grid">
+      <!-- Pipelines -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Pipelines</span>
+          <a class="card-link" href="#">View all →</a>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Pipeline</th>
+              <th>Vertical</th>
+              <th>Status</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="pipeline-name">CDR Processing</span></td>
+              <td><span class="vertical-tag" style="background:rgba(139,92,246,.12);color:#8B5CF6">📡 Telecom</span></td>
+              <td><span class="pill pill-running">● Running</span></td>
+              <td style="color:var(--gray-500)">12m</td>
+            </tr>
+            <tr>
+              <td><span class="pipeline-name">Fraud Detection</span></td>
+              <td><span class="vertical-tag" style="background:rgba(245,158,11,.12);color:#F59E0B">🔒 Security</span></td>
+              <td><span class="pill pill-success">✓ Success</span></td>
+              <td style="color:var(--gray-500)">1h 4m</td>
+            </tr>
+            <tr>
+              <td><span class="pipeline-name">Network KPIs</span></td>
+              <td><span class="vertical-tag" style="background:rgba(139,92,246,.12);color:#8B5CF6">📡 Telecom</span></td>
+              <td><span class="pill pill-success">✓ Success</span></td>
+              <td style="color:var(--gray-500)">2h 18m</td>
+            </tr>
+            <tr>
+              <td><span class="pipeline-name">Drone Imagery</span></td>
+              <td><span class="vertical-tag" style="background:rgba(16,185,129,.12);color:#10B981">⛰️ Mining</span></td>
+              <td><span class="pill pill-error">✗ Failed</span></td>
+              <td style="color:var(--gray-500)">3h 51m</td>
+            </tr>
+            <tr>
+              <td><span class="pipeline-name">Access Logs ETL</span></td>
+              <td><span class="vertical-tag" style="background:rgba(245,158,11,.12);color:#F59E0B">🔒 Security</span></td>
+              <td><span class="pill pill-running">● Running</span></td>
+              <td style="color:var(--gray-500)">4h 02m</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Drift Alerts -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Drift Alerts <span class="pill pill-error" style="font-size:11px">3</span></span>
+          <a class="card-link" href="#">View monitoring →</a>
+        </div>
+        <div class="drift-list">
+          <div class="drift-item">
+            <div class="drift-icon" style="background:rgba(239,68,68,.12)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="drift-severity" style="color:var(--error)">HIGH · Churn Model</div>
+              <div class="drift-model">tenure_months</div>
+              <div class="drift-feature">PSI score exceeded threshold</div>
+              <div class="drift-psi">
+                <div class="psi-bar"><div class="psi-fill" style="width:70%;background:var(--error)"></div></div>
+                <span class="psi-val">0.28 / 0.20</span>
+              </div>
+            </div>
+          </div>
+          <div class="drift-item">
+            <div class="drift-icon" style="background:rgba(245,158,11,.12)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="drift-severity" style="color:var(--warning)">MEDIUM · Fraud Model</div>
+              <div class="drift-model">transaction_amount</div>
+              <div class="drift-feature">Distribution shift detected</div>
+              <div class="drift-psi">
+                <div class="psi-bar"><div class="psi-fill" style="width:55%;background:var(--warning)"></div></div>
+                <span class="psi-val">0.22 / 0.20</span>
+              </div>
+            </div>
+          </div>
+          <div class="drift-item">
+            <div class="drift-icon" style="background:rgba(245,158,11,.12)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="drift-severity" style="color:var(--warning)">MEDIUM · Network Model</div>
+              <div class="drift-model">signal_quality_index</div>
+              <div class="drift-feature">Gradual drift over 7 days</div>
+              <div class="drift-psi">
+                <div class="psi-bar"><div class="psi-fill" style="width:48%;background:var(--warning)"></div></div>
+                <span class="psi-val">0.21 / 0.20</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality Spotlight -->
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:14px;font-weight:600;color:var(--white)">Dataset Quality Spotlight</div>
+      <a class="card-link" href="#">Open Quality Dashboard →</a>
+    </div>
+    <div class="quality-cards">
+      <div class="q-card">
+        <div class="q-score" style="color:#10B981">96</div>
+        <div class="q-name">CDR Records</div>
+        <div class="q-vertical">📡 Telecom</div>
+        <div class="q-bar"><div class="q-fill" style="width:96%;background:#10B981"></div></div>
+      </div>
+      <div class="q-card">
+        <div class="q-score" style="color:#10B981">91</div>
+        <div class="q-name">Network KPIs</div>
+        <div class="q-vertical">📡 Telecom</div>
+        <div class="q-bar"><div class="q-fill" style="width:91%;background:#10B981"></div></div>
+      </div>
+      <div class="q-card">
+        <div class="q-score" style="color:#F59E0B">74</div>
+        <div class="q-name">Access Logs</div>
+        <div class="q-vertical">🔒 Security</div>
+        <div class="q-bar"><div class="q-fill" style="width:74%;background:#F59E0B"></div></div>
+      </div>
+      <div class="q-card">
+        <div class="q-score" style="color:#10B981">88</div>
+        <div class="q-name">Sensor Readings</div>
+        <div class="q-vertical">⛰️ Mining</div>
+        <div class="q-bar"><div class="q-fill" style="width:88%;background:#10B981"></div></div>
+      </div>
+      <div class="q-card">
+        <div class="q-score" style="color:#EF4444">42</div>
+        <div class="q-name">Drone Imagery</div>
+        <div class="q-vertical">⛰️ Mining</div>
+        <div class="q-bar"><div class="q-fill" style="width:42%;background:#EF4444"></div></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // Sidebar collapse
+  let collapsed = false;
+  function toggleSidebar() {
+    collapsed = !collapsed;
+    const s = document.getElementById('sidebar');
+    const m = document.getElementById('main');
+    const t = document.getElementById('topbar');
+    if (collapsed) {
+      s.style.width = '64px';
+      m.style.marginLeft = '64px';
+      t.style.left = '64px';
+    } else {
+      s.style.width = '256px';
+      m.style.marginLeft = '256px';
+      t.style.left = '256px';
+    }
+  }
+
+  // Vertical dropdown
+  function toggleVertical() {
+    const d = document.getElementById('vDropdown');
+    const c = document.getElementById('vChevron');
+    d.classList.toggle('open');
+    c.style.transform = d.classList.contains('open') ? 'rotate(180deg)' : '';
+  }
+  function selectVertical(val, label, color, e) {
+    e.stopPropagation();
+    document.getElementById('vName').textContent = label;
+    document.getElementById('vDot').style.background = color + '26';
+    document.getElementById('vDropdown').classList.remove('open');
+    document.getElementById('vChevron').style.transform = '';
+    document.querySelectorAll('.v-option').forEach(o => o.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+  }
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('vSelector').contains(e.target)) {
+      document.getElementById('vDropdown').classList.remove('open');
+      document.getElementById('vChevron').style.transform = '';
+    }
+    if (!document.getElementById('notifBtn').contains(e.target) &&
+        !document.getElementById('notifPanel').contains(e.target)) {
+      document.getElementById('notifPanel').classList.remove('open');
+    }
+  });
+
+  // Vertical cards
+  function selectVertCard(el, val, label, color) {
+    document.querySelectorAll('.vert-card').forEach(c => c.classList.remove('active-vert'));
+    el.classList.add('active-vert');
+    document.getElementById('vName').textContent = label;
+  }
+
+  // Notifications
+  function toggleNotif() {
+    document.getElementById('notifPanel').classList.toggle('open');
+  }
+</script>
+</body>
+</html>
