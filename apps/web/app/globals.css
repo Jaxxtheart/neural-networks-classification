@@ -433,3 +433,23 @@ body {
 [data-radix-popper-content-wrapper] {
   z-index: 50 !important;
 }
+
+/* ============================================================
+   FORM INPUT — Phase 2 shared input style
+   ============================================================ */
+
+.form-input {
+  @apply w-full px-3 py-2 rounded-md text-sm text-white placeholder-[#6B6B88] outline-none transition-all;
+  background-color: var(--etihuku-gray-800);
+  border: 1px solid var(--etihuku-gray-700);
+}
+
+.form-input:focus {
+  border-color: var(--etihuku-indigo);
+  box-shadow: 0 0 0 2px rgba(80, 70, 229, 0.15);
+}
+
+.form-input option {
+  background-color: var(--etihuku-gray-900);
+  color: white;
+}
