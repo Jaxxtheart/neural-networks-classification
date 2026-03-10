@@ -12,7 +12,7 @@ import { PipelineTemplates, PipelineTemplate } from "@/components/pipelines/Pipe
 import { ExecutionLog } from "@/components/pipelines/ExecutionLog";
 import { VersionHistory } from "@/components/pipelines/VersionHistory";
 import { FeatureStore } from "@/components/pipelines/FeatureStore";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 
 type MainView = "builder" | "templates" | "execution" | "versions" | "features";
 

@@ -8,7 +8,7 @@ import {
   Server, HardDrive, Wifi, Code2
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 
 export type ConnectorType = "database" | "cloud" | "streaming" | "api" | "file" | "industrial";
 export type ConnectorStatus = "connected" | "error" | "disconnected" | "syncing";

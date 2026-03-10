@@ -6,7 +6,7 @@ import {
   Activity, TrendingUp, TrendingDown, Plus, ExternalLink, GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import StatusBadge from "@/components/shared/StatusBadge";
 
 type ModelStatus = "production" | "staging" | "archived" | "degraded";
 type Framework = "scikit-learn" | "pytorch" | "tensorflow" | "xgboost" | "lightgbm" | "huggingface";
