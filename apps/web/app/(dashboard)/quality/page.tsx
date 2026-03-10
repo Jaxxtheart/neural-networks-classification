@@ -10,7 +10,7 @@ import { ProfilerPanel } from "@/components/quality/ProfilerPanel";
 import { RuleEnginePanel } from "@/components/quality/RuleEnginePanel";
 import { QualityTrendChart } from "@/components/quality/QualityTrendChart";
 import { RemediationPanel } from "@/components/quality/RemediationPanel";
-import { QualityScore } from "@/components/shared/QualityScore";
+import QualityScore from "@/components/shared/QualityScore";
 
 type Tab = "profiler" | "rules" | "trends" | "remediation";
 
