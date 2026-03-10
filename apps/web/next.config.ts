@@ -2,8 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Standalone output for Vercel and containerised deployments
-  output: "standalone",
   images: {
     remotePatterns: [
       {
