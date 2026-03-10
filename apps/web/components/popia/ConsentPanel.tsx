@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CheckCircle2, XCircle, Clock, Users, Link, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -65,20 +65,27 @@ export function ConsentPanel() {
   const [activeTab, setActiveTab] = useState<"records" | "integrations" | "summary">("summary");
   const [consents] = useState<ConsentRecord[]>(MOCK_CONSENTS);
 
-  const stats = {
-    granted:   consents.filter(c => c.status === "granted").length,
-    withdrawn: consents.filter(c => c.status === "withdrawn").length,
-    pending:   consents.filter(c => c.status === "pending").length,
-    expired:   consents.filter(c => c.status === "expired").length,
-  };
+  // Single pass over consents to derive both status counts and per-purpose breakdown
+  const { stats, byPurpose } = useMemo(() => {
+    const statusCounts = { granted: 0, withdrawn: 0, pending: 0, expired: 0 };
+    const purposeMap: Record<string, { granted: number; withdrawn: number; total: number }> = {};
 
-  const byPurpose = Object.entries(PURPOSE_LABELS).map(([k, label]) => ({
-    purpose: k as Purpose,
-    label,
-    granted:   consents.filter(c => c.purpose === k && c.status === "granted").length,
-    withdrawn: consents.filter(c => c.purpose === k && c.status === "withdrawn").length,
-    total:     consents.filter(c => c.purpose === k).length,
-  }));
+    for (const c of consents) {
+      if (c.status in statusCounts) statusCounts[c.status as keyof typeof statusCounts]++;
+      if (!purposeMap[c.purpose]) purposeMap[c.purpose] = { granted: 0, withdrawn: 0, total: 0 };
+      purposeMap[c.purpose].total++;
+      if (c.status === "granted")   purposeMap[c.purpose].granted++;
+      if (c.status === "withdrawn") purposeMap[c.purpose].withdrawn++;
+    }
+
+    const byPurpose = Object.entries(PURPOSE_LABELS).map(([k, label]) => ({
+      purpose: k as Purpose,
+      label,
+      ...(purposeMap[k] ?? { granted: 0, withdrawn: 0, total: 0 }),
+    }));
+
+    return { stats: statusCounts, byPurpose };
+  }, [consents]);
 
   return (
     <div className="space-y-4">

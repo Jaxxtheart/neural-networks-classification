@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, Download, Clock, CheckCircle2, Filter, Calendar } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { FileText, Download, Clock, CheckCircle2 } from "lucide-react";
+import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
 import { cn } from "@/lib/utils/cn";
+import { formatDateTime } from "@/lib/utils/format";
 
 interface ExportRecord {
   id: string;
@@ -36,13 +38,20 @@ export function AuditExport() {
   const [includeAccess, setIncludeAccess] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [exports, setExports] = useState<ExportRecord[]>(MOCK_EXPORTS);
+  const generateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear any in-flight timer on unmount to avoid state-update-on-unmounted-component
+  useEffect(() => () => { if (generateTimerRef.current) clearTimeout(generateTimerRef.current); }, []);
 
   function handleGenerate() {
+    if (isGenerating) return;
     setIsGenerating(true);
     const id = `e${Date.now()}`;
+    const now = new Date();
+    const monthYear = now.toLocaleDateString("en-ZA", { month: "short", year: "numeric" });
     const newExport: ExportRecord = {
       id,
-      title: `${scope} Lineage Report — ${new Date().toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`,
+      title: `${scope} Lineage Report — ${monthYear}`,
       generatedAt: "Generating…",
       generatedBy: "You",
       scope,
@@ -51,10 +60,10 @@ export function AuditExport() {
       format,
     };
     setExports(prev => [newExport, ...prev]);
-    setTimeout(() => {
+    generateTimerRef.current = setTimeout(() => {
       setExports(prev => prev.map(e =>
         e.id === id
-          ? { ...e, generatedAt: new Date().toLocaleString(), pages: 28, status: "ready" }
+          ? { ...e, generatedAt: formatDateTime(new Date()), pages: 28, status: "ready" }
           : e
       ));
       setIsGenerating(false);
@@ -103,25 +112,11 @@ export function AuditExport() {
           <div className="text-sm font-semibold text-white opacity-0">·</div>
           <div className="text-xs text-[var(--etihuku-gray-400)] font-medium">Include sections:</div>
           {[
-            { label: "Data Lineage Graph",    value: includeLineage, set: setIncludeLineage },
-            { label: "POPIA Compliance",       value: includePOPIA,  set: setIncludePOPIA   },
-            { label: "Access Control Audit",   value: includeAccess, set: setIncludeAccess  },
+            { label: "Data Lineage Graph",  value: includeLineage, set: setIncludeLineage },
+            { label: "POPIA Compliance",     value: includePOPIA,  set: setIncludePOPIA   },
+            { label: "Access Control Audit", value: includeAccess, set: setIncludeAccess  },
           ].map(item => (
-            <label key={item.label} className="flex items-center gap-3 cursor-pointer group">
-              <div
-                onClick={() => item.set(!item.value)}
-                className={cn(
-                  "w-8 h-4 rounded-full transition-all relative cursor-pointer",
-                  item.value ? "bg-[var(--etihuku-indigo)]" : "bg-[var(--etihuku-gray-700)]"
-                )}
-              >
-                <div className={cn(
-                  "absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all",
-                  item.value ? "left-4" : "left-0.5"
-                )} />
-              </div>
-              <span className="text-xs text-[var(--etihuku-gray-300)] group-hover:text-white">{item.label}</span>
-            </label>
+            <ToggleSwitch key={item.label} checked={item.value} onChange={item.set} label={item.label} />
           ))}
 
           <button

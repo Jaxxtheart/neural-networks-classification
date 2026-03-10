@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { EyeOff, Eye, Plus, Trash2, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { EyeOff, Eye, Plus, Trash2, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
+import { VERTICAL_COMPLIANCE_RULES } from "@/lib/types/governance";
 
 type MaskType = "full" | "partial" | "hash" | "null" | "redact";
 
@@ -71,14 +73,62 @@ export function ColumnMasking() {
     return isMasked ? rule.example.masked : rule.example.raw;
   }
 
-  const grouped = rules.reduce<Record<string, MaskingRule[]>>((acc, r) => {
-    if (!acc[r.dataset]) acc[r.dataset] = [];
-    acc[r.dataset].push(r);
-    return acc;
-  }, {});
+  const grouped = useMemo(() =>
+    rules.reduce<Record<string, MaskingRule[]>>((acc, r) => {
+      if (!acc[r.dataset]) acc[r.dataset] = [];
+      acc[r.dataset].push(r);
+      return acc;
+    }, {})
+  , [rules]);
+
+  // Vertical compliance: columns that MUST be masked but have no active rule
+  const requiredMaskAlerts = useMemo(() => {
+    const maskingRules = VERTICAL_COMPLIANCE_RULES.filter(r => r.category === "masking" && r.requiredMaskedColumns?.length);
+    return maskingRules.flatMap(rule =>
+      (rule.requiredMaskedColumns ?? []).flatMap(col => {
+        const datasetMatch = rules.find(
+          r => r.dataset.toLowerCase().includes(rule.dataPattern.toLowerCase()) &&
+               r.column === col && r.active
+        );
+        if (datasetMatch) return []; // already covered
+        return [{ rule, column: col }];
+      })
+    );
+  }, [rules]);
 
   return (
     <div className="space-y-4">
+      {/* Required mask compliance alerts */}
+      {requiredMaskAlerts.length > 0 && (
+        <div className="rounded-lg border border-red-800/40 bg-red-950/10 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-red-800/30 bg-red-950/20">
+            <ShieldAlert size={14} className="text-red-400 shrink-0" />
+            <span className="text-xs font-semibold text-red-300">
+              {requiredMaskAlerts.length} Required Masking Rule{requiredMaskAlerts.length > 1 ? "s" : ""} Missing
+            </span>
+          </div>
+          <div className="divide-y divide-red-900/30">
+            {requiredMaskAlerts.map(({ rule, column }) => (
+              <div key={`${rule.id}-${column}`} className="flex items-center gap-3 px-3 py-2.5">
+                <div className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-950/40 text-red-400 border border-red-800/40 shrink-0">
+                  {rule.regulation}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-mono text-xs text-white">{column}</span>
+                  <span className="text-[10px] text-[var(--etihuku-gray-500)] ml-2">{rule.requirement}</span>
+                </div>
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className="btn btn-sm text-[10px] border border-red-700 text-red-300 hover:bg-red-900/30 shrink-0"
+                >
+                  Add Rule
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--etihuku-gray-400)]">Preview as role:</span>
@@ -174,9 +224,7 @@ export function ColumnMasking() {
                       </span>
                     </td>
                     <td className="px-3 py-2">
-                      <div onClick={() => toggleRule(rule.id)} className={cn("w-7 h-3.5 rounded-full relative cursor-pointer transition-all", rule.active ? "bg-[var(--etihuku-indigo)]" : "bg-[var(--etihuku-gray-700)]")}>
-                        <div className={cn("absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all", rule.active ? "left-3.5" : "left-0.5")} />
-                      </div>
+                      <ToggleSwitch size="sm" checked={rule.active} onChange={() => toggleRule(rule.id)} />
                     </td>
                     <td className="px-3 py-2">
                       <button onClick={() => deleteRule(rule.id)} className="text-[var(--etihuku-gray-600)] hover:text-red-400 transition-colors">

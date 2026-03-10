@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { User, Download, Trash2, Edit2, Send, Clock, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -61,10 +61,15 @@ export function DataSubjectPanel() {
   const [filterStatus, setFilterStatus] = useState<DSRStatus | "all">("all");
   const [activeStep, setActiveStep] = useState<Record<string, number>>({});
 
-  const filtered = dsrs.filter(d => filterStatus === "all" || d.status === filterStatus);
+  const filtered = useMemo(
+    () => dsrs.filter(d => filterStatus === "all" || d.status === filterStatus),
+    [dsrs, filterStatus]
+  );
 
-  const overdue = dsrs.filter(d => d.overdue).length;
-  const openCount = dsrs.filter(d => !["completed", "rejected"].includes(d.status)).length;
+  const { overdue, openCount } = useMemo(() => ({
+    overdue:   dsrs.filter(d => d.overdue).length,
+    openCount: dsrs.filter(d => d.status !== "completed" && d.status !== "rejected").length,
+  }), [dsrs]);
 
   function advanceStep(dsrId: string) {
     setActiveStep(prev => ({ ...prev, [dsrId]: (prev[dsrId] ?? 0) + 1 }));

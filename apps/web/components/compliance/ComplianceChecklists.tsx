@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CheckCircle2, Circle, AlertTriangle, ChevronRight, Database, Filter } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -100,15 +100,17 @@ export function ComplianceChecklists() {
   const [selected, setSelected] = useState<DatasetChecklist>(MOCK_CHECKLISTS[0]);
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "blocked">("all");
 
-  const actions = selected.actions.filter(a =>
-    filterStatus === "all" || a.status === filterStatus
-  );
-
-  const grouped = actions.reduce<Record<string, ChecklistAction[]>>((acc, a) => {
-    if (!acc[a.category]) acc[a.category] = [];
-    acc[a.category].push(a);
-    return acc;
-  }, {});
+  const { actions, grouped } = useMemo(() => {
+    const actions = selected.actions.filter(a =>
+      filterStatus === "all" || a.status === filterStatus
+    );
+    const grouped = actions.reduce<Record<string, ChecklistAction[]>>((acc, a) => {
+      if (!acc[a.category]) acc[a.category] = [];
+      acc[a.category].push(a);
+      return acc;
+    }, {});
+    return { actions, grouped };
+  }, [selected, filterStatus]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

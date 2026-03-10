@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Filter, ZoomIn, ZoomOut, Maximize2, X, Database, GitBranch, Cpu, BarChart2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import type { Vertical } from "@/lib/types/governance";
+
+export type { Vertical };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type LineageNodeType = "source" | "pipeline" | "dataset" | "model" | "prediction";
-export type Vertical = "telecom" | "security" | "mining" | "engineering";
 
 export interface LineageNode {
   id: string;
@@ -155,8 +157,9 @@ export function LineageGraph({ highlightNode, filterVertical = "all" }: LineageG
     setIsPanning(false);
   }, []);
 
-  // Highlight paths for selected node
-  const getHighlightedEdges = (nodeId: string): Set<string> => {
+  // Memoised: recompute highlighted edges only when selected node changes
+  const highlightedEdges = useMemo<Set<string> | null>(() => {
+    if (!selectedNode) return null;
     const highlighted = new Set<string>();
     const visit = (id: string, direction: "up" | "down") => {
       EDGES.forEach(e => {
@@ -171,16 +174,20 @@ export function LineageGraph({ highlightNode, filterVertical = "all" }: LineageG
         }
       });
     };
-    visit(nodeId, "down");
-    visit(nodeId, "up");
+    visit(selectedNode.id, "down");
+    visit(selectedNode.id, "up");
     return highlighted;
-  };
+  }, [selectedNode?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const highlightedEdges = selectedNode ? getHighlightedEdges(selectedNode.id) : null;
+  const visibleNodes = useMemo(
+    () => nodes.filter(n => vertFilter === "all" || n.vertical === vertFilter),
+    [nodes, vertFilter]
+  );
 
-  const visibleNodes = nodes.filter(n => vertFilter === "all" || n.vertical === vertFilter);
-  const visibleIds = new Set(visibleNodes.map(n => n.id));
-  const visibleEdges = EDGES.filter(e => visibleIds.has(e.source) && visibleIds.has(e.target));
+  const visibleEdges = useMemo(() => {
+    const visibleIds = new Set(visibleNodes.map(n => n.id));
+    return EDGES.filter(e => visibleIds.has(e.source) && visibleIds.has(e.target));
+  }, [visibleNodes]);
 
   return (
     <div className="space-y-3">

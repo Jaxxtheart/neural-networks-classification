@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Radio, Lock, Mountain, Wrench, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-type Vertical = "telecom" | "security" | "mining" | "engineering";
+import type { Vertical } from "@/lib/types/governance";
 type CheckStatus = "pass" | "fail" | "warning" | "na";
 
 interface ComplianceItem {
@@ -119,7 +119,10 @@ export function VerticalTemplates() {
   const [expandedTemplate, setExpandedTemplate] = useState<string | null>("t-icasa");
   const [statusFilters, setStatusFilters] = useState<Set<CheckStatus>>(new Set(["fail", "warning"]));
 
-  const filteredTemplates = TEMPLATES.filter(t => selectedVertical === "all" || t.vertical === selectedVertical);
+  const filteredTemplates = useMemo(
+    () => TEMPLATES.filter(t => selectedVertical === "all" || t.vertical === selectedVertical),
+    [selectedVertical]
+  );
 
   function toggleStatusFilter(s: CheckStatus) {
     setStatusFilters(prev => {

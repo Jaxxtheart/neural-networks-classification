@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Clock, AlertTriangle, Archive, Trash2, RefreshCw, Plus, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Clock, AlertTriangle, Archive, Trash2, RefreshCw, Plus, CheckCircle2, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatNumber } from "@/lib/utils/format";
+import { VERTICAL_COMPLIANCE_RULES } from "@/lib/types/governance";
 
 type RetentionAction = "delete" | "archive" | "anonymise" | "move";
 type EnforcementStatus = "active" | "paused" | "pending_review";
@@ -75,17 +77,35 @@ export function RetentionPolicies() {
     ));
   }
 
-  const totalApproaching = policies.reduce((s, p) => s + p.rowsApproachingExpiry, 0);
+  const { totalApproaching, activeCount, pendingCount } = useMemo(() => ({
+    totalApproaching: policies.reduce((s, p) => s + p.rowsApproachingExpiry, 0),
+    activeCount:      policies.filter(p => p.enforcementStatus === "active").length,
+    pendingCount:     policies.filter(p => p.enforcementStatus === "pending_review").length,
+  }), [policies]);
+
+  // Check policies against vertical-specific minimum retention rules
+  const retentionViolations = useMemo(() => {
+    const retentionRules = VERTICAL_COMPLIANCE_RULES.filter(r => r.category === "retention" && r.minRetentionDays);
+    return retentionRules.flatMap(rule => {
+      return policies
+        .filter(p =>
+          p.dataset.toLowerCase().includes(rule.dataPattern.toLowerCase()) &&
+          rule.minRetentionDays !== undefined &&
+          p.retentionDays < rule.minRetentionDays
+        )
+        .map(p => ({ rule, policy: p }));
+    });
+  }, [policies]);
 
   return (
     <div className="space-y-4">
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Active Policies",    value: policies.filter(p => p.enforcementStatus === "active").length.toString(),          color: "#10B981" },
-          { label: "Pending Review",     value: policies.filter(p => p.enforcementStatus === "pending_review").length.toString(),  color: "#F59E0B" },
-          { label: "Rows Expiring Soon", value: totalApproaching.toLocaleString(),                                                  color: "#EF4444" },
-          { label: "Enforcement Runs",   value: MOCK_LOGS.length.toString(),                                                        color: "#8B5CF6" },
+          { label: "Active Policies",    value: activeCount.toString(),              color: "#10B981" },
+          { label: "Pending Review",     value: pendingCount.toString(),             color: "#F59E0B" },
+          { label: "Rows Expiring Soon", value: formatNumber(totalApproaching),      color: "#EF4444" },
+          { label: "Enforcement Runs",   value: MOCK_LOGS.length.toString(),         color: "#8B5CF6" },
         ].map(s => (
           <div key={s.label} className="rounded-lg border border-[var(--etihuku-gray-800)] bg-[var(--etihuku-gray-900)] p-3 text-center">
             <div className="text-2xl font-display font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -98,9 +118,45 @@ export function RetentionPolicies() {
         <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-800/30 bg-amber-950/10">
           <AlertTriangle size={14} className="text-amber-400 shrink-0" />
           <div className="flex-1 text-xs text-[var(--etihuku-gray-300)]">
-            <strong className="text-white">{totalApproaching.toLocaleString()} rows</strong> across multiple datasets are approaching their retention expiry date.
+            <strong className="text-white">{formatNumber(totalApproaching)} rows</strong> across multiple datasets are approaching their retention expiry date.
           </div>
           <button className="btn btn-secondary btn-sm text-xs shrink-0">Review</button>
+        </div>
+      )}
+
+      {/* Vertical-specific compliance violations */}
+      {retentionViolations.length > 0 && (
+        <div className="rounded-lg border border-red-800/40 bg-red-950/10 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-red-800/30 bg-red-950/20">
+            <ShieldAlert size={14} className="text-red-400 shrink-0" />
+            <span className="text-xs font-semibold text-red-300">
+              {retentionViolations.length} Regulatory Retention Violation{retentionViolations.length > 1 ? "s" : ""} Detected
+            </span>
+          </div>
+          <div className="divide-y divide-red-900/30">
+            {retentionViolations.map(({ rule, policy }) => (
+              <div key={`${rule.id}-${policy.id}`} className="flex items-start gap-3 px-3 py-2.5">
+                <div className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-950/40 text-red-400 border border-red-800/40 shrink-0 mt-0.5">
+                  {rule.regulation}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-white">{policy.dataset}</div>
+                  <div className="text-[10px] text-red-300 mt-0.5">
+                    Policy: {policy.retentionDays}d — Required: ≥{rule.minRetentionDays}d
+                  </div>
+                  <div className="text-[10px] text-[var(--etihuku-gray-500)] mt-0.5">{rule.requirement}</div>
+                </div>
+                <button
+                  onClick={() => setPolicies(prev => prev.map(p =>
+                    p.id === policy.id ? { ...p, retentionDays: rule.minRetentionDays! } : p
+                  ))}
+                  className="btn btn-sm text-[10px] border border-red-700 text-red-300 hover:bg-red-900/30 shrink-0"
+                >
+                  Fix
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -144,7 +200,7 @@ export function RetentionPolicies() {
                     Retain {policy.retentionDays}d ({years}y) → {actCfg.label}
                     {policy.lastRun && ` · Last run: ${policy.lastRun}`}
                     {policy.nextRun && ` · Next: ${policy.nextRun}`}
-                    {policy.rowsApproachingExpiry > 0 && <span className="text-amber-400"> · {policy.rowsApproachingExpiry.toLocaleString()} expiring soon</span>}
+                    {policy.rowsApproachingExpiry > 0 && <span className="text-amber-400"> · {formatNumber(policy.rowsApproachingExpiry)} expiring soon</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -185,7 +241,7 @@ export function RetentionPolicies() {
                         <ActIcon size={10} /> {actCfg.label}
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-mono text-white">{log.rowsAffected.toLocaleString()}</td>
+                    <td className="px-3 py-2 font-mono text-white">{formatNumber(log.rowsAffected)}</td>
                     <td className="px-3 py-2">
                       <span className={cn("flex items-center gap-1 text-[10px] font-medium",
                         log.status === "success" ? "text-green-400" : log.status === "partial" ? "text-amber-400" : "text-red-400"

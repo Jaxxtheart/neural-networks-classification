@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { AlertTriangle, Shield, CheckCircle2, Clock, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatNumber, formatDateTime } from "@/lib/utils/format";
 
 type Severity = "critical" | "high" | "medium" | "low";
 type BreachStatus = "open" | "investigating" | "contained" | "reported" | "closed";
@@ -104,15 +105,17 @@ export function BreachRegister() {
     const id = `b${Date.now()}`;
     setBreaches(prev => [{
       id, title: newBreach.title, severity: newBreach.severity, status: "open",
-      discoveredAt: new Date().toLocaleString(), affectedSubjects: parseInt(newBreach.affectedSubjects) || 0,
+      discoveredAt: formatDateTime(new Date()), affectedSubjects: parseInt(newBreach.affectedSubjects) || 0,
       dataTypes: [], description: newBreach.description,
     }, ...prev]);
     setNewBreach({ title: "", severity: "medium", description: "", affectedSubjects: "" });
     setShowNewForm(false);
   }
 
-  const openCount = breaches.filter(b => !["closed"].includes(b.status)).length;
-  const criticalCount = breaches.filter(b => b.severity === "critical").length;
+  const { openCount, criticalCount } = useMemo(() => ({
+    openCount:     breaches.filter(b => b.status !== "closed").length,
+    criticalCount: breaches.filter(b => b.severity === "critical").length,
+  }), [breaches]);
 
   return (
     <div className="space-y-4">
@@ -192,7 +195,7 @@ export function BreachRegister() {
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-white truncate">{breach.title}</div>
                   <div className="text-[10px] text-[var(--etihuku-gray-400)] mt-0.5">
-                    Discovered {breach.discoveredAt} · {breach.affectedSubjects.toLocaleString()} subjects
+                    Discovered {breach.discoveredAt} · {formatNumber(breach.affectedSubjects)} subjects
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Search, Download, Shield, Eye, Edit2, Trash2, LogIn, Database, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatNumber } from "@/lib/utils/format";
 
 type AuditAction = "READ" | "WRITE" | "DELETE" | "LOGIN" | "EXPORT" | "SCHEMA_CHANGE" | "PERMISSION_CHANGE";
 
@@ -65,7 +66,12 @@ export function AuditTrail() {
     )
   ), [search, actionFilter, resultFilter]);
 
-  const deniedCount = MOCK_ENTRIES.filter(e => e.result === "denied").length;
+  // Compute summary stats once from the full log (not the filtered view)
+  const { deniedCount, uniqueUsers, exportCount } = useMemo(() => ({
+    deniedCount: MOCK_ENTRIES.filter(e => e.result === "denied").length,
+    uniqueUsers: new Set(MOCK_ENTRIES.map(e => e.user)).size,
+    exportCount: MOCK_ENTRIES.filter(e => e.action === "EXPORT").length,
+  }), []); // MOCK_ENTRIES is module-level constant
 
   return (
     <div className="space-y-4">
@@ -74,8 +80,8 @@ export function AuditTrail() {
         {[
           { label: "Events (today)",    value: MOCK_ENTRIES.length.toString(), color: "#3B82F6" },
           { label: "Denied",            value: deniedCount.toString(),          color: "#EF4444" },
-          { label: "Unique Users",      value: new Set(MOCK_ENTRIES.map(e => e.user)).size.toString(), color: "#8B5CF6" },
-          { label: "Exports Today",     value: MOCK_ENTRIES.filter(e => e.action === "EXPORT").length.toString(), color: "#F59E0B" },
+          { label: "Unique Users",      value: uniqueUsers.toString(),          color: "#8B5CF6" },
+          { label: "Exports Today",     value: exportCount.toString(),          color: "#F59E0B" },
         ].map(s => (
           <div key={s.label} className="rounded-lg border border-[var(--etihuku-gray-800)] bg-[var(--etihuku-gray-900)] p-3 text-center">
             <div className="text-2xl font-display font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -157,7 +163,7 @@ export function AuditTrail() {
                       )}>{entry.result}</span>
                     </td>
                     <td className="px-3 py-2 font-mono text-[var(--etihuku-gray-400)]">
-                      {entry.rowsAffected != null ? entry.rowsAffected.toLocaleString() : "—"}
+                      {entry.rowsAffected != null ? formatNumber(entry.rowsAffected) : "—"}
                     </td>
                   </tr>
                   {isExpanded && entry.query && (

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Filter, Plus, Trash2, Play, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Filter, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatNumber } from "@/lib/utils/format";
 
 type FilterOp = "=" | "!=" | "IN" | "NOT IN" | "STARTS WITH" | "IS NULL";
 
@@ -91,8 +92,9 @@ export function RowFilters() {
     setShowAdd(false);
   }
 
-  const activeForTest = filters.filter(
-    f => f.active && f.dataset === testDataset && f.appliesTo.includes(testRole)
+  const activeForTest = useMemo(
+    () => filters.filter(f => f.active && f.dataset === testDataset && f.appliesTo.includes(testRole)),
+    [filters, testDataset, testRole]
   );
 
   return (
@@ -124,7 +126,7 @@ export function RowFilters() {
               <div key={f.id} className="flex items-center gap-2 text-xs text-[var(--etihuku-gray-300)]">
                 <Filter size={11} className="text-[var(--etihuku-indigo)] shrink-0" />
                 <span className="font-mono">{f.column} {f.operator} {f.value}</span>
-                <span className="text-[var(--etihuku-gray-500)]">({f.rowsFiltered?.toLocaleString()} rows filtered)</span>
+                <span className="text-[var(--etihuku-gray-500)]">({f.rowsFiltered != null ? formatNumber(f.rowsFiltered) : undefined} rows filtered)</span>
               </div>
             ))}
           </div>
@@ -211,7 +213,7 @@ export function RowFilters() {
               </code>
               <div className="text-[10px] text-[var(--etihuku-gray-500)] mt-1">
                 {f.description}
-                {f.rowsFiltered != null && ` · ${f.rowsFiltered.toLocaleString()} rows filtered`}
+                {f.rowsFiltered != null && ` · ${formatNumber(f.rowsFiltered)} rows filtered`}
               </div>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {f.appliesTo.map(role => (

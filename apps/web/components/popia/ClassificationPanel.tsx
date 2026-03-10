@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Shield, Tag, AlertTriangle, Search, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -59,28 +59,42 @@ export function ClassificationPanel() {
   const [unconfirmedOnly, setUnconfirmedOnly] = useState(false);
   const [columns, setColumns] = useState<ColumnRecord[]>(MOCK_COLUMNS);
   const [isScanning, setIsScanning] = useState(false);
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filtered = columns.filter(c =>
-    (classFilter === "all" || c.dataClass === classFilter) &&
-    (!unconfirmedOnly || !c.confirmed) &&
-    (c.column.toLowerCase().includes(search.toLowerCase()) || c.dataset.toLowerCase().includes(search.toLowerCase()))
-  );
+  useEffect(() => () => { if (scanTimerRef.current) clearTimeout(scanTimerRef.current); }, []);
+
+  // Derive filtered list and stats in a single memo pass
+  const { filtered, stats } = useMemo(() => {
+    const filtered: ColumnRecord[] = [];
+    const stats = { personal: 0, special: 0, children: 0, unconfirmed: 0 };
+    const lSearch = search.toLowerCase();
+
+    for (const c of columns) {
+      // Accumulate stats over all columns regardless of filter
+      if (c.dataClass === "personal") stats.personal++;
+      if (c.dataClass === "special")  stats.special++;
+      if (c.dataClass === "children") stats.children++;
+      if (!c.confirmed)               stats.unconfirmed++;
+
+      // Apply filters
+      if (classFilter !== "all" && c.dataClass !== classFilter) continue;
+      if (unconfirmedOnly && c.confirmed) continue;
+      if (lSearch && !c.column.toLowerCase().includes(lSearch) && !c.dataset.toLowerCase().includes(lSearch)) continue;
+      filtered.push(c);
+    }
+    return { filtered, stats };
+  }, [columns, classFilter, unconfirmedOnly, search]);
 
   function confirm(id: string, cls: DataClass) {
     setColumns(prev => prev.map(c => c.id === id ? { ...c, confirmed: true, dataClass: cls } : c));
   }
 
   function runScan() {
+    if (isScanning) return;
     setIsScanning(true);
-    setTimeout(() => setIsScanning(false), 2000);
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    scanTimerRef.current = setTimeout(() => setIsScanning(false), 2000);
   }
-
-  const stats = {
-    personal:    columns.filter(c => c.dataClass === "personal").length,
-    special:     columns.filter(c => c.dataClass === "special").length,
-    children:    columns.filter(c => c.dataClass === "children").length,
-    unconfirmed: columns.filter(c => !c.confirmed).length,
-  };
 
   return (
     <div className="space-y-4">

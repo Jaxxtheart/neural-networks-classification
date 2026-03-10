@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { EyeOff, Play, CheckCircle2, Sliders, Hash, Shuffle, Lock } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { EyeOff, Play, Sliders, Hash, Shuffle, Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatNumber } from "@/lib/utils/format";
+import { ToggleSwitch } from "@/components/shared/ToggleSwitch";
 
 type AnonTechnique = "masking" | "pseudonymisation" | "k-anonymity" | "l-diversity" | "suppression" | "generalisation";
 
@@ -47,16 +49,22 @@ export function AnonymizationPanel() {
   const [rules, setRules] = useState<AnonRule[]>(MOCK_RULES);
   const [activeTab, setActiveTab] = useState<"rules" | "kanon" | "new">("rules");
   const [runningId, setRunningId] = useState<string | null>(null);
+  const applyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [newRule, setNewRule] = useState({ dataset: "Customer DWH", column: "", technique: "masking" as AnonTechnique, param: "" });
+
+  // Clear in-flight apply timer on unmount
+  useEffect(() => () => { if (applyTimerRef.current) clearTimeout(applyTimerRef.current); }, []);
 
   function toggleRule(id: string) {
     setRules(prev => prev.map(r => r.id === id ? { ...r, active: !r.active } : r));
   }
 
   function applyRule(id: string) {
+    if (runningId) return; // prevent concurrent applies
     setRunningId(id);
-    setTimeout(() => {
+    if (applyTimerRef.current) clearTimeout(applyTimerRef.current);
+    applyTimerRef.current = setTimeout(() => {
       setRules(prev => prev.map(r => r.id === id ? { ...r, lastApplied: "just now" } : r));
       setRunningId(null);
     }, 1800);
@@ -116,7 +124,7 @@ export function AnonymizationPanel() {
                   <div className="text-[10px] text-[var(--etihuku-gray-500)] mt-0.5">
                     {rule.dataset} · {Object.entries(rule.params).map(([k, v]) => `${k}=${v}`).join(", ")}
                     {rule.lastApplied && ` · Applied ${rule.lastApplied}`}
-                    {rule.rowsAffected && ` · ${rule.rowsAffected.toLocaleString()} rows`}
+                    {rule.rowsAffected && ` · ${formatNumber(rule.rowsAffected)} rows`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -127,12 +135,7 @@ export function AnonymizationPanel() {
                   >
                     {isRunning ? <><Play size={10} className="animate-pulse" /> Running…</> : <><Play size={10} /> Apply</>}
                   </button>
-                  <div
-                    onClick={() => toggleRule(rule.id)}
-                    className={cn("w-8 h-4 rounded-full relative cursor-pointer transition-all", rule.active ? "bg-[var(--etihuku-indigo)]" : "bg-[var(--etihuku-gray-700)]")}
-                  >
-                    <div className={cn("absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all", rule.active ? "left-4" : "left-0.5")} />
-                  </div>
+                  <ToggleSwitch checked={rule.active} onChange={() => toggleRule(rule.id)} />
                 </div>
               </div>
             );
