@@ -27,10 +27,12 @@ export function ToggleSwitch({
       : { track: "w-8 h-4",   thumb: "w-3 h-3",     on: "left-4",   off: "left-0.5" };
 
   const toggle = (
-    <div
+    <button
+      type="button"
       role="switch"
       aria-checked={checked}
-      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
       className={cn(
         "relative rounded-full transition-colors cursor-pointer shrink-0",
         track.track,
@@ -46,13 +48,13 @@ export function ToggleSwitch({
           checked ? track.on : track.off
         )}
       />
-    </div>
+    </button>
   );
 
   if (!label) return toggle;
 
   return (
-    <label className="flex items-center gap-2 cursor-pointer group">
+    <label className={cn("flex items-center gap-2 group", disabled ? "cursor-not-allowed" : "cursor-pointer")}>
       {toggle}
       <span className="text-xs text-[var(--etihuku-gray-300)] group-hover:text-white select-none">
         {label}
