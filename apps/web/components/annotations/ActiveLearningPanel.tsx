@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Brain, TrendingUp, Zap, ChevronRight, RefreshCw, BarChart2, Target, Layers } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { cn } from "@/lib/utils/cn";
-import { QualityScore } from "@/components/shared/QualityScore";
+import QualityScore from "@/components/shared/QualityScore";
 
 interface UncertainSample {
   id: string;

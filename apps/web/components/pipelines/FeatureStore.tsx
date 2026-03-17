@@ -6,7 +6,7 @@ import {
   TrendingUp, Search, Filter, ArrowUpRight, GitBranch, Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { QualityScore } from "@/components/shared/QualityScore";
+import QualityScore from "@/components/shared/QualityScore";
 
 type ServingMode = "batch" | "realtime" | "both";
 type Vertical = "telecom" | "security" | "mining" | "engineering";
@@ -24,7 +24,7 @@ interface Feature {
   lastComputed: string;
   entityKey: string;
   qualityScore: number;
-  batchLatencyMs: number;
+  batchLatencyMs?: number;
   realtimeLatencyMs?: number;
   version: string;
   tags: string[];
