@@ -24,7 +24,7 @@ interface Feature {
   lastComputed: string;
   entityKey: string;
   qualityScore: number;
-  batchLatencyMs: number;
+  batchLatencyMs?: number;
   realtimeLatencyMs?: number;
   version: string;
   tags: string[];
