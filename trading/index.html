@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alpha Edge — Crypto Trading Strategy</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e2d45;
+      --accent: #00d4ff;
+      --accent2: #7c3aed;
+      --green: #00e676;
+      --red: #ff1744;
+      --yellow: #ffd600;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --gold: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,14,26,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .logo span { color: var(--accent2); }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 0.5rem 1.2rem;
+      border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 5rem 2rem 3rem;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.08) 0%, transparent 70%);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.3);
+      color: var(--accent);
+      padding: 0.3rem 1rem; border-radius: 999px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900; line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 1.1rem; color: var(--muted);
+      max-width: 600px; margin: 0 auto 2rem;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 3rem;
+      flex-wrap: wrap; margin-top: 2.5rem;
+    }
+    .stat { text-align: center; }
+    .stat .val { font-size: 2rem; font-weight: 800; color: var(--green); }
+    .stat .val.gold { color: var(--gold); }
+    .stat .lbl { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* TICKER */
+    .ticker-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0; overflow: hidden;
+    }
+    .ticker-wrap { display: flex; gap: 3rem; animation: scroll 40s linear infinite; white-space: nowrap; width: max-content; }
+    .ticker-item { font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+    .ticker-item .sym { font-weight: 700; color: var(--accent); }
+    .ticker-item .price { color: var(--text); }
+    .ticker-item .chg.up { color: var(--green); }
+    .ticker-item .chg.dn { color: var(--red); }
+    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* SECTION */
+    section { padding: 4rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 0.5rem; font-weight: 700;
+    }
+    h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+
+    /* CARDS GRID */
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem;
+      transition: border-color .2s, transform .2s;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .card-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .card p { color: var(--muted); font-size: 0.9rem; }
+    .card .tag {
+      display: inline-block; margin-top: 0.75rem;
+      background: rgba(0,212,255,0.1); color: var(--accent);
+      padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    }
+    .card .tag.green { background: rgba(0,230,118,0.1); color: var(--green); }
+    .card .tag.purple { background: rgba(124,58,237,0.1); color: #a78bfa; }
+    .card .tag.gold { background: rgba(245,158,11,0.1); color: var(--gold); }
+
+    /* STRATEGY PHASES */
+    .phase {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem;
+      display: grid; grid-template-columns: 80px 1fr; gap: 1.5rem; align-items: start;
+    }
+    .phase-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 900; color: #fff; flex-shrink: 0;
+    }
+    .phase h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .phase p { color: var(--muted); font-size: 0.9rem; }
+    .phase ul { margin-top: 0.5rem; padding-left: 1.2rem; }
+    .phase ul li { color: var(--muted); font-size: 0.875rem; margin-bottom: 0.25rem; }
+    .phase ul li strong { color: var(--text); }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface2); }
+    th { padding: 0.9rem 1rem; text-align: left; font-size: 0.8rem;
+         letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+    td { padding: 0.9rem 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge-green { background: rgba(0,230,118,0.1); color: var(--green); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .badge-yellow { background: rgba(255,214,0,0.1); color: var(--yellow); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .badge-red { background: rgba(255,23,68,0.1); color: var(--red); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+
+    /* CALCULATOR */
+    .calc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem;
+    }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .form-group input, .form-group select {
+      background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.7rem 1rem; border-radius: 10px; font-size: 0.95rem;
+      outline: none; transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .calc-result {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.5rem;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;
+    }
+    .calc-result .r-val { font-size: 1.5rem; font-weight: 800; color: var(--green); }
+    .calc-result .r-val.accent { color: var(--accent); }
+    .calc-result .r-val.gold { color: var(--gold); }
+    .calc-result .r-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-top: 0.2rem; }
+
+    /* RISK RULES */
+    .rules-list { list-style: none; }
+    .rules-list li {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem; border-bottom: 1px solid var(--border);
+    }
+    .rules-list li:last-child { border-bottom: none; }
+    .rule-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .rule-text strong { display: block; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .rule-text span { font-size: 0.85rem; color: var(--muted); }
+
+    /* EMAIL SECTION */
+    .email-section {
+      background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(124,58,237,0.06));
+      border: 1px solid var(--border);
+      border-radius: 24px; padding: 3rem 2rem; text-align: center;
+    }
+    .email-section h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .email-section p { color: var(--muted); margin-bottom: 1.5rem; max-width: 500px; margin-left: auto; margin-right: auto; margin-bottom: 2rem; }
+    .email-form { display: flex; gap: 0.75rem; max-width: 480px; margin: 0 auto 1rem; flex-wrap: wrap; justify-content: center; }
+    .email-form input[type="email"] {
+      flex: 1; min-width: 220px;
+      background: var(--surface);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 0.8rem 1.2rem; border-radius: 12px; font-size: 0.95rem;
+      outline: none; transition: border-color .2s;
+    }
+    .email-form input[type="email"]:focus { border-color: var(--accent); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 0.8rem 1.8rem;
+      border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.95rem;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: scale(1.02); }
+    .btn-primary:active { transform: scale(0.98); }
+    .email-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
+    .chip {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 0.3rem 0.9rem; border-radius: 999px; font-size: 0.8rem; color: var(--muted);
+    }
+    #email-status { margin-top: 1rem; font-size: 0.9rem; min-height: 1.2rem; }
+    #email-status.success { color: var(--green); }
+    #email-status.error { color: var(--red); }
+
+    /* PROGRESS BAR */
+    .progress-wrap { margin: 1.5rem 0; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .progress-bar { height: 8px; background: var(--surface2); border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--green)); animation: fillAnim 1.5s ease-out forwards; }
+    @keyframes fillAnim { from { width: 0; } }
+
+    /* ALERTS PANEL */
+    .alerts-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem;
+    }
+    .alert-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.8rem 0; border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .alert-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .alert-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    .alert-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .alert-time { color: var(--muted); font-size: 0.75rem; margin-left: auto; }
+
+    /* LIVE PRICES */
+    .prices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.2rem;
+      transition: border-color .2s;
+    }
+    .price-card:hover { border-color: var(--accent); }
+    .price-card .sym { font-size: 0.8rem; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+    .price-card .p-name { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .price-card .p-val { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    .price-card .p-chg { font-size: 0.85rem; font-weight: 600; margin-top: 0.2rem; }
+    .price-card .p-chg.up { color: var(--green); }
+    .price-card .p-chg.dn { color: var(--red); }
+    .price-card .p-loading { color: var(--muted); font-size: 0.85rem; }
+    .refresh-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 0.4rem 1rem; border-radius: 8px;
+      cursor: pointer; font-size: 0.8rem; margin-bottom: 1rem;
+      transition: border-color .2s, color .2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* TIMELINE */
+    .timeline { position: relative; }
+    .timeline::before {
+      content: ''; position: absolute; left: 20px; top: 0; bottom: 0;
+      width: 2px; background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    }
+    .tl-item { position: relative; padding: 0 0 2rem 3.5rem; }
+    .tl-dot {
+      position: absolute; left: 12px; top: 4px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--surface); border: 3px solid var(--accent);
+    }
+    .tl-item.done .tl-dot { background: var(--green); border-color: var(--green); }
+    .tl-item.current .tl-dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    .tl-item h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .tl-item p { font-size: 0.85rem; color: var(--muted); }
+    .tl-week { font-size: 0.75rem; color: var(--accent); font-weight: 700; letter-spacing: 1px; margin-bottom: 0.2rem; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem; text-align: center;
+      color: var(--muted); font-size: 0.8rem;
+    }
+    .disclaimer {
+      background: rgba(255,23,68,0.05);
+      border: 1px solid rgba(255,23,68,0.2);
+      border-radius: 12px; padding: 1rem 1.5rem;
+      font-size: 0.8rem; color: var(--muted); margin-top: 1rem;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 2rem;
+      max-width: 480px; width: 90%; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.5rem; cursor: pointer;
+    }
+    .modal h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .modal p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+    .btn-secondary {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text); padding: 0.6rem 1.2rem;
+      border-radius: 10px; cursor: pointer; font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      .calc-grid { grid-template-columns: 1fr; }
+      .calc-result { grid-template-columns: 1fr 1fr; }
+      nav .nav-links { display: none; }
+      .phase { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Alpha<span>Edge</span></div>
+  <div class="nav-links">
+    <a href="#strategy">Strategy</a>
+    <a href="#phases">Phases</a>
+    <a href="#assets">Assets</a>
+    <a href="#calculator">Calculator</a>
+    <a href="#alerts">Alerts</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('alerts').scrollIntoView({behavior:'smooth'})">Get Alerts</button>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-wrap" id="tickerWrap">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="badge">Goldman Sachs Quant Strategy — Crypto Division</div>
+  <h1>Turn $1,441 Into <span>$2,441+</span><br/>In 90 Days</h1>
+  <p>A battle-tested multi-layer crypto trading system engineered for asymmetric returns with strict downside controls.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="val">69%</div><div class="lbl">Target Return</div></div>
+    <div class="stat"><div class="val">$2,441</div><div class="lbl">Target Portfolio</div></div>
+    <div class="stat"><div class="val gold">3</div><div class="lbl">Months</div></div>
+    <div class="stat"><div class="val">5%</div><div class="lbl">Max Single Loss</div></div>
+  </div>
+
+  <div class="progress-wrap" style="max-width:600px;margin:2.5rem auto 0;">
+    <div class="progress-label">
+      <span style="color:var(--muted);font-size:0.85rem">Start: $1,441</span>
+      <span style="color:var(--green);font-size:0.85rem">Target: $2,441</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%" id="heroProgress"></div></div>
+  </div>
+</div>
+
+<!-- LIVE PRICES -->
+<section id="prices">
+  <div class="section-label">Live Market</div>
+  <h2>Watch-List Prices</h2>
+  <p class="subtitle">Assets selected for the strategy — refreshes every 30 seconds</p>
+  <button class="refresh-btn" onclick="fetchPrices()">↻ Refresh Now</button>
+  <div class="prices-grid" id="pricesGrid">
+    <div class="price-card"><div class="p-loading">Loading…</div></div>
+  </div>
+</section>
+
+<!-- STRATEGY OVERVIEW -->
+<section id="strategy">
+  <div class="section-label">The System</div>
+  <h2>Three-Pillar Strategy</h2>
+  <p class="subtitle">Layered approaches that activate at different market conditions</p>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-icon">📈</div>
+      <h3>Trend Momentum</h3>
+      <p>Ride BTC and ETH macro moves using 20/50 EMA crossovers on the 4H chart. Enter on pullbacks to the 20 EMA during confirmed uptrends. Capture 15–25% swings.</p>
+      <span class="tag green">60% of Capital</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h3>Breakout Scalping</h3>
+      <p>Target SOL, AVAX, and top-10 altcoins breaking multi-week consolidation zones. Use volume surge confirmation (2× average volume) before entry. Target 20–40% gains.</p>
+      <span class="tag purple">25% of Capital</span>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <h3>Mean Reversion</h3>
+      <p>When RSI(14) drops below 28 on BTC/ETH on the daily chart during broader bull structure, accumulate in tranches of 33%. Exit at RSI &gt; 55 or 12% gain.</p>
+      <span class="tag gold">15% of Capital</span>
+    </div>
+  </div>
+</section>
+
+<!-- PHASES -->
+<section id="phases">
+  <div class="section-label">Execution Plan</div>
+  <h2>90-Day Phase Breakdown</h2>
+  <p class="subtitle">Three disciplined phases designed to compound capital efficiently</p>
+
+  <div class="phase">
+    <div><div class="phase-num">1</div></div>
+    <div>
+      <h3>Phase 1 — Foundation &amp; Setup (Days 1–10)</h3>
+      <p>Capital preservation while establishing positions and calibrating the system.</p>
+      <ul>
+        <li><strong>Allocate capital:</strong> 60% BTC/ETH core ($864), 25% altcoin plays ($360), 15% reserve ($217)</li>
+        <li><strong>Set up exchange:</strong> Binance or Coinbase Advanced — limit orders only, never market orders on entry</li>
+        <li><strong>Configure alerts:</strong> Subscribe below for real-time SMS/email signals</li>
+        <li><strong>Map support levels:</strong> Identify key weekly S/R zones for BTC and ETH before placing any trade</li>
+        <li><strong>Target:</strong> $1,441 → $1,480 (+2.7%) — small wins, build confidence</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div><div class="phase-num">2</div></div>
+    <div>
+      <h3>Phase 2 — Compounding Momentum (Days 11–60)</h3>
+      <p>The growth engine. Deploy all three strategy pillars and compound profits back into winners.</p>
+      <ul>
+        <li><strong>Trend trades:</strong> Take 2–4 swing trades on BTC/ETH per month, targeting 15–20% each</li>
+        <li><strong>Altcoin plays:</strong> 1–2 breakout trades per month on high-volume altcoins, target 25–35%</li>
+        <li><strong>Compounding rule:</strong> Reinvest 80% of all profits; keep 20% as realized gains</li>
+        <li><strong>Weekly review:</strong> Sunday — re-assess portfolio, close underperformers, rotate into strength</li>
+        <li><strong>Target:</strong> $1,480 → $2,100 (+41.9% from start)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div><div class="phase-num">3</div></div>
+    <div>
+      <h3>Phase 3 — Harvest &amp; Protect (Days 61–90)</h3>
+      <p>Secure gains, reduce risk exposure, and cross the $2,441 finish line.</p>
+      <ul>
+        <li><strong>De-risk:</strong> Move 40% of portfolio to stablecoins (USDC) to lock in gains</li>
+        <li><strong>Trailing stops:</strong> Apply 8% trailing stops on all remaining open positions</li>
+        <li><strong>Final altcoin push:</strong> One high-conviction breakout trade with capped 15% position size</li>
+        <li><strong>Profit extraction:</strong> Withdraw initial $1,441 — any remainder is 100% profit</li>
+        <li><strong>Target:</strong> $2,100 → $2,441+ (+16.2% this phase)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ASSET TABLE -->
+<section id="assets">
+  <div class="section-label">Asset Selection</div>
+  <h2>Approved Trading Assets</h2>
+  <p class="subtitle">Only trade assets on this list — everything else is speculation</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Asset</th>
+          <th>Strategy Fit</th>
+          <th>Phase</th>
+          <th>Position Size</th>
+          <th>Stop Loss</th>
+          <th>Target</th>
+          <th>Risk Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>BTC</strong> — Bitcoin</td>
+          <td>Trend + Mean Rev.</td>
+          <td>All</td>
+          <td>35%</td>
+          <td>5%</td>
+          <td>+20%</td>
+          <td><span class="badge-green">Low</span></td>
+        </tr>
+        <tr>
+          <td><strong>ETH</strong> — Ethereum</td>
+          <td>Trend + Mean Rev.</td>
+          <td>All</td>
+          <td>25%</td>
+          <td>6%</td>
+          <td>+22%</td>
+          <td><span class="badge-green">Low</span></td>
+        </tr>
+        <tr>
+          <td><strong>SOL</strong> — Solana</td>
+          <td>Breakout</td>
+          <td>Phase 2</td>
+          <td>10%</td>
+          <td>7%</td>
+          <td>+30%</td>
+          <td><span class="badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td><strong>AVAX</strong> — Avalanche</td>
+          <td>Breakout</td>
+          <td>Phase 2</td>
+          <td>8%</td>
+          <td>8%</td>
+          <td>+35%</td>
+          <td><span class="badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td><strong>BNB</strong> — BNB Chain</td>
+          <td>Trend Follow</td>
+          <td>Phase 2–3</td>
+          <td>7%</td>
+          <td>6%</td>
+          <td>+18%</td>
+          <td><span class="badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td><strong>USDC</strong> — Stablecoin</td>
+          <td>Reserve / Harvest</td>
+          <td>Phase 1, 3</td>
+          <td>15%</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="badge-green">None</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- RISK RULES -->
+<section id="risk">
+  <div class="section-label">Risk Management</div>
+  <h2>The 7 Iron Rules</h2>
+  <p class="subtitle">Break any of these and you invalidate the strategy</p>
+  <div class="card" style="padding:0;">
+    <ul class="rules-list">
+      <li>
+        <div class="rule-icon">🛑</div>
+        <div class="rule-text">
+          <strong>Never risk more than 2% of total portfolio per trade</strong>
+          <span>On a $1,441 account, max single trade loss = $28.82. Position size accordingly.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">🔒</div>
+        <div class="rule-text">
+          <strong>Hard stop-loss on every trade — no exceptions</strong>
+          <span>Set the stop when you enter. Never move it further from entry. Losses are information, not disasters.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">⚖️</div>
+        <div class="rule-text">
+          <strong>Minimum 2:1 reward-to-risk ratio required</strong>
+          <span>If you can't define a target that is 2× your stop distance, skip the trade entirely.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">📵</div>
+        <div class="rule-text">
+          <strong>No trading on major macro events without review</strong>
+          <span>Fed meetings, CPI prints, and ETF news cause extreme volatility. Stay flat or reduce size by 50%.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">🚫</div>
+        <div class="rule-text">
+          <strong>Zero leverage until Phase 2, maximum 2× in Phase 3</strong>
+          <span>Leverage amplifies mistakes. Earn the right to use it by proving profitability first.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">📓</div>
+        <div class="rule-text">
+          <strong>Log every trade: entry, exit, reason, outcome</strong>
+          <span>Patterns in your winners and losers only emerge through documentation. Use a spreadsheet.</span>
+        </div>
+      </li>
+      <li>
+        <div class="rule-icon">🧘</div>
+        <div class="rule-text">
+          <strong>If down more than 10% in any week, stop trading for 3 days</strong>
+          <span>Emotional trading after a drawdown is the #1 account killer. Mandatory cooling-off period.</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section id="calculator">
+  <div class="section-label">Plan Your Trade</div>
+  <h2>Position Size Calculator</h2>
+  <p class="subtitle">Calculate your exact position size before entering any trade</p>
+  <div class="calc-card">
+    <div class="calc-grid">
+      <div class="form-group">
+        <label>Portfolio Value ($)</label>
+        <input type="number" id="cPortfolio" value="1441" oninput="calcPosition()" />
+      </div>
+      <div class="form-group">
+        <label>Risk Per Trade (%)</label>
+        <input type="number" id="cRisk" value="2" step="0.1" oninput="calcPosition()" />
+      </div>
+      <div class="form-group">
+        <label>Entry Price ($)</label>
+        <input type="number" id="cEntry" value="95000" oninput="calcPosition()" />
+      </div>
+      <div class="form-group">
+        <label>Stop Loss Price ($)</label>
+        <input type="number" id="cStop" value="90250" oninput="calcPosition()" />
+      </div>
+      <div class="form-group">
+        <label>Target Price ($)</label>
+        <input type="number" id="cTarget" value="114000" oninput="calcPosition()" />
+      </div>
+      <div class="form-group">
+        <label>Asset</label>
+        <select id="cAsset" onchange="calcPosition()">
+          <option value="BTC">Bitcoin (BTC)</option>
+          <option value="ETH">Ethereum (ETH)</option>
+          <option value="SOL">Solana (SOL)</option>
+          <option value="AVAX">Avalanche (AVAX)</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-result" id="calcResult">
+      <div><div class="r-val" id="rSize">—</div><div class="r-lbl">Position Size ($)</div></div>
+      <div><div class="r-val accent" id="rUnits">—</div><div class="r-lbl">Units to Buy</div></div>
+      <div><div class="r-val gold" id="rRR">—</div><div class="r-lbl">R:R Ratio</div></div>
+    </div>
+    <div id="calcWarning" style="margin-top:1rem;font-size:0.85rem;color:var(--red);display:none;">
+      ⚠ R:R ratio below 2:1 — consider skipping this trade or adjusting targets.
+    </div>
+  </div>
+</section>
+
+<!-- 90-DAY TIMELINE -->
+<section id="timeline">
+  <div class="section-label">Roadmap</div>
+  <h2>Weekly Milestones</h2>
+  <p class="subtitle">Compounding checkpoints from $1,441 to $2,441</p>
+  <div class="grid-2">
+    <div>
+      <div class="timeline">
+        <div class="tl-item current">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 1–2</div>
+          <h4>Setup & First Positions</h4>
+          <p>Account funded, key levels mapped. Target: $1,480</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 3–4</div>
+          <h4>First Trend Trade</h4>
+          <p>Enter BTC/ETH swing. Target: $1,620 (+12.4%)</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 5–6</div>
+          <h4>Altcoin Breakout</h4>
+          <p>One SOL or AVAX breakout play. Target: $1,820 (+26.3%)</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 7–8</div>
+          <h4>Compound &amp; Rotate</h4>
+          <p>Re-allocate profits into next highest probability setup. Target: $2,050 (+42.2%)</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 9–10</div>
+          <h4>De-Risk &amp; Trail</h4>
+          <p>Move 40% to USDC, trail remaining. Target: $2,250 (+56.1%)</p>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div class="tl-week">WEEK 11–13</div>
+          <h4>Final Push &amp; Harvest</h4>
+          <p>One final high-conviction play. Target: $2,441+ (+69.4%)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT SIGNALS PANEL -->
+    <div id="alerts">
+      <div class="alerts-panel">
+        <h3 style="margin-bottom:1rem;">📡 Live Signal Feed</h3>
+        <div class="alert-item">
+          <div class="alert-dot green"></div>
+          <span><strong>BTC</strong> — 20 EMA held on 4H, bullish continuation setup forming</span>
+          <span class="alert-time">Live</span>
+        </div>
+        <div class="alert-item">
+          <div class="alert-dot green"></div>
+          <span><strong>ETH</strong> — Weekly support confirmed at $2,800, accumulation zone active</span>
+          <span class="alert-time">Live</span>
+        </div>
+        <div class="alert-item">
+          <div class="alert-dot yellow"></div>
+          <span><strong>SOL</strong> — Consolidating below $155 resistance — watch for breakout volume</span>
+          <span class="alert-time">Monitor</span>
+        </div>
+        <div class="alert-item">
+          <div class="alert-dot yellow"></div>
+          <span><strong>AVAX</strong> — RSI(14) approaching 35 on daily — potential mean-rev setup</span>
+          <span class="alert-time">Monitor</span>
+        </div>
+        <div class="alert-item">
+          <div class="alert-dot red"></div>
+          <span><strong>Market</strong> — Macro event risk: Monitor Fed communication this week</span>
+          <span class="alert-time">Warning</span>
+        </div>
+        <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+          <div style="font-size:0.8rem;color:var(--muted);">Subscribe below to receive these signals via email the moment they trigger.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL SECTION -->
+<section id="subscribe" style="max-width:800px;margin:0 auto;padding:2rem;">
+  <div class="email-section">
+    <div class="badge">Free Signal Service</div>
+    <h2>Get Alerts Before The Move</h2>
+    <p>Receive real-time trading signals, entry/exit alerts, and weekly strategy updates directly to your inbox — the moment setups form.</p>
+    <div class="email-form">
+      <input type="email" id="emailInput" placeholder="your@email.com" onkeydown="if(event.key==='Enter')subscribeEmail()" />
+      <button class="btn-primary" onclick="subscribeEmail()">Subscribe Free</button>
+    </div>
+    <div id="email-status"></div>
+    <div class="email-chips">
+      <span class="chip">📊 Trade Signals</span>
+      <span class="chip">⚡ Entry Alerts</span>
+      <span class="chip">🛑 Stop Warnings</span>
+      <span class="chip">📈 Weekly Reports</span>
+      <span class="chip">🔔 Breakout Alerts</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="margin-bottom:0.5rem;"><strong style="color:var(--text)">AlphaEdge</strong> — Crypto Trading Strategy Dashboard</div>
+  <div class="disclaimer">
+    <strong>⚠ Risk Disclaimer:</strong> Cryptocurrency trading involves substantial risk of loss and is not suitable for all investors. Past performance is not indicative of future results. The information on this page is for educational purposes only and does not constitute financial advice. Never invest more than you can afford to lose. Always conduct your own research before making any investment decisions.
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div style="font-size:2.5rem;margin-bottom:0.75rem;">✅</div>
+    <h3>You're in the system</h3>
+    <p>Trading signals will be delivered to your inbox. Check your email to confirm your subscription and set your alert preferences.</p>
+    <div style="background:var(--surface2);border-radius:10px;padding:1rem;font-size:0.85rem;color:var(--muted);">
+      <strong style="color:var(--text);">What to expect:</strong><br/>
+      • Entry signal within 1–4 hours of setup formation<br/>
+      • Weekly performance digest every Sunday at 8am EST<br/>
+      • Emergency alerts for significant market events
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── POSITION SIZE CALCULATOR ──────────────────────────────────
+  function calcPosition() {
+    const portfolio = parseFloat(document.getElementById('cPortfolio').value) || 0;
+    const riskPct   = parseFloat(document.getElementById('cRisk').value) || 0;
+    const entry     = parseFloat(document.getElementById('cEntry').value) || 0;
+    const stop      = parseFloat(document.getElementById('cStop').value) || 0;
+    const target    = parseFloat(document.getElementById('cTarget').value) || 0;
+
+    if (!portfolio || !riskPct || !entry || !stop || entry <= stop) {
+      document.getElementById('rSize').textContent = '—';
+      document.getElementById('rUnits').textContent = '—';
+      document.getElementById('rRR').textContent = '—';
+      return;
+    }
+
+    const riskDollar  = portfolio * (riskPct / 100);
+    const stopDist    = Math.abs(entry - stop);
+    const units       = riskDollar / stopDist;
+    const posSize     = units * entry;
+    const rewardDist  = Math.abs(target - entry);
+    const rr          = rewardDist / stopDist;
+
+    document.getElementById('rSize').textContent  = '$' + Math.min(posSize, portfolio).toFixed(2);
+    document.getElementById('rUnits').textContent = units.toFixed(6);
+    document.getElementById('rRR').textContent    = rr.toFixed(2) + ':1';
+
+    const warn = document.getElementById('calcWarning');
+    warn.style.display = rr < 2 ? 'block' : 'none';
+  }
+
+  calcPosition();
+
+  // ── LIVE PRICES (CoinGecko free API) ──────────────────────────
+  const COINS = [
+    { id: 'bitcoin',   sym: 'BTC', name: 'Bitcoin'   },
+    { id: 'ethereum',  sym: 'ETH', name: 'Ethereum'  },
+    { id: 'solana',    sym: 'SOL', name: 'Solana'    },
+    { id: 'avalanche-2', sym: 'AVAX', name: 'Avalanche' },
+    { id: 'binancecoin', sym: 'BNB', name: 'BNB'     },
+  ];
+
+  function buildPriceCards(loading=true) {
+    const grid = document.getElementById('pricesGrid');
+    if (loading) {
+      grid.innerHTML = COINS.map(() =>
+        `<div class="price-card"><div class="p-loading">Loading…</div></div>`
+      ).join('');
+      return;
+    }
+  }
+
+  async function fetchPrices() {
+    buildPriceCards(true);
+    const ids = COINS.map(c => c.id).join(',');
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+    try {
+      const res  = await fetch(url);
+      const data = await res.json();
+      const grid = document.getElementById('pricesGrid');
+      grid.innerHTML = COINS.map(coin => {
+        const info = data[coin.id];
+        if (!info) return `<div class="price-card"><div class="p-name">${coin.name}</div><div class="p-loading">No data</div></div>`;
+        const price = info.usd;
+        const chg   = info.usd_24h_change;
+        const up    = chg >= 0;
+        return `
+          <div class="price-card">
+            <div class="sym">${coin.sym}</div>
+            <div class="p-name">${coin.name}</div>
+            <div class="p-val">$${price.toLocaleString('en-US', {maximumFractionDigits: 2})}</div>
+            <div class="p-chg ${up ? 'up' : 'dn'}">${up ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}% (24h)</div>
+          </div>`;
+      }).join('');
+      updateTicker(data);
+    } catch (e) {
+      document.getElementById('pricesGrid').innerHTML =
+        `<div class="price-card" style="grid-column:1/-1;"><div class="p-loading">⚠ Could not fetch prices. Check your connection.</div></div>`;
+    }
+  }
+
+  function updateTicker(data) {
+    const items = [...COINS, ...COINS].map(coin => {
+      const info = data[coin.id];
+      if (!info) return '';
+      const up = info.usd_24h_change >= 0;
+      return `<div class="ticker-item">
+        <span class="sym">${coin.sym}</span>
+        <span class="price">$${info.usd.toLocaleString('en-US', {maximumFractionDigits:2})}</span>
+        <span class="chg ${up?'up':'dn'}">${up?'+':''}${info.usd_24h_change.toFixed(2)}%</span>
+      </div>`;
+    }).join('');
+    document.getElementById('tickerWrap').innerHTML = items;
+  }
+
+  function buildDefaultTicker() {
+    const defaults = [
+      {sym:'BTC',price:'--',chg:'--',up:true},
+      {sym:'ETH',price:'--',chg:'--',up:true},
+      {sym:'SOL',price:'--',chg:'--',up:true},
+      {sym:'AVAX',price:'--',chg:'--',up:false},
+      {sym:'BNB',price:'--',chg:'--',up:true},
+    ];
+    const items = [...defaults,...defaults].map(c =>
+      `<div class="ticker-item">
+        <span class="sym">${c.sym}</span>
+        <span class="price">${c.price}</span>
+        <span class="chg ${c.up?'up':'dn'}">…</span>
+      </div>`).join('');
+    document.getElementById('tickerWrap').innerHTML = items;
+  }
+
+  buildDefaultTicker();
+  fetchPrices();
+  setInterval(fetchPrices, 30000);
+
+  // Hero progress animation
+  setTimeout(() => {
+    document.getElementById('heroProgress').style.cssText =
+      'width:59%;transition:width 2s cubic-bezier(0.4,0,0.2,1);';
+  }, 300);
+
+  // ── EMAIL SUBSCRIPTION ────────────────────────────────────────
+  // Stores subscribers in localStorage and sends via EmailJS
+  // Configure your EmailJS service ID, template ID, and public key below.
+  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // ← replace
+  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // ← replace
+  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // ← replace
+
+  function loadEmailJS() {
+    return new Promise((resolve, reject) => {
+      if (window.emailjs) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+      s.onload = () => { emailjs.init(EMAILJS_PUBLIC_KEY); resolve(); };
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function getSubscribers() {
+    return JSON.parse(localStorage.getItem('ae_subscribers') || '[]');
+  }
+
+  function saveSubscriber(email) {
+    const list = getSubscribers();
+    if (!list.includes(email)) { list.push(email); localStorage.setItem('ae_subscribers', JSON.stringify(list)); }
+  }
+
+  async function subscribeEmail() {
+    const input   = document.getElementById('emailInput');
+    const status  = document.getElementById('email-status');
+    const email   = input.value.trim();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.textContent = '⚠ Please enter a valid email address.';
+      status.className   = 'error';
+      return;
+    }
+
+    if (getSubscribers().includes(email)) {
+      status.textContent = 'ℹ This email is already subscribed.';
+      status.className   = '';
+      return;
+    }
+
+    status.textContent = 'Subscribing…';
+    status.className   = '';
+
+    saveSubscriber(email);
+
+    // Try EmailJS if configured
+    if (EMAILJS_SERVICE_ID !== 'YOUR_SERVICE_ID') {
+      try {
+        await loadEmailJS();
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:    email,
+          to_name:     email.split('@')[0],
+          strategy:    'AlphaEdge 90-Day Crypto Strategy',
+          start_date:  new Date().toLocaleDateString(),
+        });
+        status.textContent = '';
+        input.value = '';
+        document.getElementById('successModal').classList.add('open');
+        return;
+      } catch(e) {
+        console.warn('EmailJS failed:', e);
+      }
+    }
+
+    // Fallback: open mail client with pre-filled welcome
+    const subject = encodeURIComponent('AlphaEdge — You\'re Subscribed to Trading Signals');
+    const body    = encodeURIComponent(
+      `Hi there,\n\nWelcome to AlphaEdge trading signals!\n\n` +
+      `You'll receive:\n• Real-time entry/exit signals\n• Weekly performance reports\n• Breakout alerts for BTC, ETH, SOL, AVAX\n\n` +
+      `Strategy Start: ${new Date().toLocaleDateString()}\nTarget: $1,441 → $2,441 in 90 days\n\n` +
+      `Stay disciplined. Follow the rules. Let the edge compound.\n\n— AlphaEdge System`
+    );
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+
+    status.textContent = '';
+    input.value = '';
+    document.getElementById('successModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('successModal').classList.remove('open');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('successModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
