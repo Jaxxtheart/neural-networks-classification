@@ -6,7 +6,7 @@ import {
   TrendingUp, Search, Filter, ArrowUpRight, GitBranch, Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { QualityScore } from "@/components/shared/QualityScore";
+import QualityScore from "@/components/shared/QualityScore";
 
 type ServingMode = "batch" | "realtime" | "both";
 type Vertical = "telecom" | "security" | "mining" | "engineering";
